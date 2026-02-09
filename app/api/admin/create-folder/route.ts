@@ -11,33 +11,44 @@ async function checkAdmin(req: NextRequest): Promise<string | null> {
     const authHeader = req.headers.get("authorization") || "";
     const token = authHeader.replace("Bearer ", "");
 
-    if (!token) return null;
+    if (!token) {
+      console.error("No auth token provided");
+      return null;
+    }
 
     const { data } = await supabaseAdmin.auth.getUser(token);
-    if (!data?.user) return null;
+    if (!data?.user) {
+      console.error("User not found for token");
+      return null;
+    }
+
+    console.log("Checking admin status for user:", data.user.id);
 
     // Try profiles table first
-    const { data: profile } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("role")
       .eq("id", data.user.id)
       .single();
 
     if (profile?.role === "admin") {
+      console.log("User is admin via profiles table");
       return data.user.id;
     }
 
     // Fallback to admins table
-    const { data: adminRecord } = await supabaseAdmin
+    const { data: adminRecord, error: adminError } = await supabaseAdmin
       .from("admins")
       .select("*")
       .eq("user_id", data.user.id)
       .single();
 
     if (adminRecord) {
+      console.log("User is admin via admins table");
       return data.user.id;
     }
 
+    console.error("User not found in admin tables. Profile error:", profileError, "Admin error:", adminError);
     return null;
   } catch (error) {
     console.error("Admin check error:", error);
