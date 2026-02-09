@@ -18,6 +18,7 @@ import {
 import { useParams } from "next/navigation";
 
 import Breadcrumb from "@/components/Breadcrumb";
+import ConfirmModal from "@/components/ConfirmModal";
 export default function FolderPage() {
   const params = useParams();
   const folderId = params?.id as string;
@@ -28,6 +29,9 @@ export default function FolderPage() {
   const [loading, setLoading] = useState(true);
   const [breadcrumbPath, setBreadcrumbPath] = useState<any[]>([]);
   const { isAdmin } = useAuth();
+  const [renameTarget, setRenameTarget] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   useEffect(() => {
     if (!folderId) return;
@@ -89,6 +93,72 @@ export default function FolderPage() {
     setBreadcrumbPath(path);
   }
 
+  function startRenameFile(file: any) {
+    setRenameTarget({ type: "file", item: file });
+    setRenameValue(file.file_name);
+  }
+
+  function startRenameFolder(folder: any) {
+    setRenameTarget({ type: "folder", item: folder });
+    setRenameValue(folder.name);
+  }
+
+  function startDeleteFile(file: any) {
+    setDeleteTarget({ type: "file", item: file });
+  }
+
+  function startDeleteFolder(folder: any) {
+    setDeleteTarget({ type: "folder", item: folder });
+  }
+
+  async function confirmRename() {
+    if (!renameTarget) return;
+
+    if (renameTarget.type === "file") {
+      await supabase
+        .from("files")
+        .update({ file_name: renameValue })
+        .eq("id", renameTarget.item.id);
+      loadFiles();
+    } else {
+      await supabase
+        .from("folders")
+        .update({ name: renameValue })
+        .eq("id", renameTarget.item.id);
+      loadSubfolders();
+    }
+
+    setRenameTarget(null);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+
+    if (deleteTarget.type === "file") {
+      await supabase
+        .from("files")
+        .delete()
+        .eq("id", deleteTarget.item.id);
+      loadFiles();
+    } else {
+      // SAFETY CHECK: prevent deleting root folders
+      if (!deleteTarget.item.parent_id) {
+        alert("You cannot delete a root folder!");
+        setDeleteTarget(null);
+        return;
+      }
+
+      await supabase
+        .from("folders")
+        .delete()
+        .eq("id", deleteTarget.item.id);
+
+      loadSubfolders();
+    }
+
+    setDeleteTarget(null);
+  }
+
   if (!folder) {
     return (
       <div className="min-h-screen bg-[#0f0e17] flex items-center justify-center text-white pt-20">
@@ -117,33 +187,12 @@ export default function FolderPage() {
       />
 
       {/* BREADCRUMB */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="relative z-10 mb-8 flex items-center gap-2 text-gray-400 text-sm"
-      >
-        <Link href="/dashboard" className="hover:text-purple-300 transition flex items-center gap-1">
-          <Home size={16} /> Dashboard
-        </Link>
-
-        {breadcrumbPath.map((item, idx) => (
-          <div key={item.id} className="flex items-center gap-2">
-            <ChevronRight size={16} />
-            {idx === breadcrumbPath.length - 1 ? (
-              <span className="text-purple-300 font-semibold">{item.name}</span>
-            ) : (
-              <Link href={`/folder/${item.id}`} className="hover:text-purple-300 transition">
-                {item.name}
-              </Link>
-            )}
-          </div>
-        ))}
-      </motion.div>
-
-        <Breadcrumb items={breadcrumbPath.map((item) => ({
+      <Breadcrumb
+        items={breadcrumbPath.map((item) => ({
           label: item.name,
-          href: `/folder/${item.id}`
-        }))} />
+          href: `/folder/${item.id}`,
+        }))}
+      />
       {/* PAGE TITLE */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -198,7 +247,7 @@ export default function FolderPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ scale: 1.03, translateY: -5 }}
-                className="group"
+                className="group relative"
               >
                 <Link href={`/folder/${subfolder.id}`}>
                   <div className="p-6 bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl hover:border-purple-400/50 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer transition-all duration-300 h-full flex flex-col items-start">
@@ -211,6 +260,23 @@ export default function FolderPage() {
                     <p className="text-gray-400 text-sm mt-2">Subfolder</p>
                   </div>
                 </Link>
+
+                {isAdmin && (
+                  <div className="absolute top-3 right-3 flex gap-2 z-20">
+                    <button
+                      onClick={() => startRenameFolder(subfolder)}
+                      className="text-blue-300 hover:text-blue-200 text-sm bg-white/5 px-2 py-1 rounded"
+                    >
+                      Rename
+                    </button>
+                    <button
+                      onClick={() => startDeleteFolder(subfolder)}
+                      className="text-red-400 hover:text-red-300 text-sm bg-white/5 px-2 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
@@ -240,7 +306,7 @@ export default function FolderPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
                 whileHover={{ scale: 1.03, translateY: -5 }}
-                className="group"
+                className="group relative"
               >
                 <div className="p-6 bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl hover:border-fuchsia-400/50 hover:shadow-2xl hover:shadow-fuchsia-500/20 cursor-pointer transition-all duration-300 h-full flex flex-col">
                   <div className="w-12 h-12 bg-gradient-to-br from-fuchsia-500 to-pink-600 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:shadow-fuchsia-500/40 transition mb-4">
@@ -270,6 +336,23 @@ export default function FolderPage() {
                     </a>
                   </div>
                 </div>
+
+                {isAdmin && (
+                  <div className="absolute top-3 right-3 flex gap-2 z-20">
+                    <button
+                      onClick={() => startRenameFile(file)}
+                      className="text-blue-300 hover:text-blue-200 text-sm bg-white/5 px-2 py-1 rounded"
+                    >
+                      Rename
+                    </button>
+                    <button
+                      onClick={() => startDeleteFile(file)}
+                      className="text-red-400 hover:text-red-300 text-sm bg-white/5 px-2 py-1 rounded"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
               </motion.div>
             ))}
           </div>
@@ -282,6 +365,28 @@ export default function FolderPage() {
           </div>
         )}
       </div>
+      <ConfirmModal
+        open={!!renameTarget}
+        text={
+          <div>
+            <p className="mb-3">Enter new name:</p>
+            <input
+              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg outline-none"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+            />
+          </div>
+        }
+        onConfirm={confirmRename}
+        onCancel={() => setRenameTarget(null)}
+      />
+
+      <ConfirmModal
+        open={!!deleteTarget}
+        text={`Are you sure you want to delete "${deleteTarget?.item?.name || deleteTarget?.item?.file_name}"?`}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
