@@ -20,8 +20,7 @@ export default function DashboardPage() {
   const { user, isAdmin } = useAuth();
 
   useEffect(() => {
-    if (!user) return;
-
+    // Public users can now load folders (no login required)
     const loadFolders = async () => {
       try {
         const { data, error } = await supabase
@@ -40,15 +39,7 @@ export default function DashboardPage() {
     };
 
     loadFolders();
-  }, [user]);
-
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#0f0e17] flex items-center justify-center text-white pt-20">
-        <p className="text-lg">Login required to access dashboard</p>
-      </div>
-    );
-  }
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#0f0e17] pt-24 px-6 text-white relative overflow-hidden">
@@ -72,10 +63,10 @@ export default function DashboardPage() {
         className="relative z-10 mb-12"
       >
         <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-violet-400 to-purple-600 text-transparent bg-clip-text">
-          Your Study Folders
+          ECET Resources
         </h1>
         <p className="text-gray-300 text-lg">
-          Welcome back! Explore your learning materials.
+          Browse and download study materials. Admin tools available after login.
         </p>
       </motion.div>
 
