@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/utils/supabase";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -28,22 +29,36 @@ export default function SignupPage() {
     }
 
     try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      // Use Supabase client directly for signup
+      const { data, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
       });
 
-      const data = await res.json();
-
-      if (data.error) {
-        setError(data.error);
+      if (authError) {
+        setError(authError.message || "Signup failed");
         setLoading(false);
         return;
       }
 
-      // Redirect to login page
-      router.push("/login?signup=success");
+      if (data.user) {
+        // Insert profile record
+        const { error: profileError } = await supabase.from("profiles").insert({
+          id: data.user.id,
+          email: email,
+          role: "user",
+        });
+
+        if (profileError) {
+          console.error("Profile insert error:", profileError);
+        }
+
+        // Redirect to login page
+        router.push("/login?signup=success");
+      } else {
+        setError("Signup failed. Please try again.");
+        setLoading(false);
+      }
     } catch (err) {
       setError("An error occurred. Please try again.");
       setLoading(false);

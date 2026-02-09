@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/utils/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,23 +22,26 @@ export default function LoginPage() {
     const password = formData.get("password") as string;
 
     try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      // Use Supabase client directly for auth
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
-      const data = await res.json();
-
-      if (data.error) {
-        setError(data.error);
+      if (authError) {
+        setError(authError.message || "Invalid credentials");
         setLoading(false);
         return;
       }
 
-      // Store session token if needed
-      localStorage.setItem("authToken", data.session?.access_token);
-      router.push("/");
+      if (data.session) {
+        // Wait a moment for auth state to sync
+        await new Promise(resolve => setTimeout(resolve, 500));
+        router.push("/");
+      } else {
+        setError("Login failed. Please try again.");
+        setLoading(false);
+      }
     } catch (err) {
       setError("An error occurred. Please try again.");
       setLoading(false);
