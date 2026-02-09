@@ -4,14 +4,16 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { Suspense } from "react";
 
-export default function RenameFolder() {
+export const dynamic = "force-dynamic";
+
+function RenameFolderContent() {
   const { isAdmin } = useAuth();
-
-  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
-
   const params = useSearchParams();
   const router = useRouter();
+
+  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
 
   const id = params.get("id");
   const [newName, setNewName] = useState("");
@@ -61,5 +63,13 @@ export default function RenameFolder() {
         Save
       </button>
     </div>
+  );
+}
+
+export default function RenameFolder() {
+  return (
+    <Suspense fallback={<p className="p-6">Loading...</p>}>
+      <RenameFolderContent />
+    </Suspense>
   );
 }

@@ -4,14 +4,15 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/supabase";
+import { Suspense } from "react";
 
-export default function CreateFolder() {
+function CreateFolderContent() {
   const { isAdmin } = useAuth();
-
-  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
   const router = useRouter();
   const params = useSearchParams();
   const parent_id = params.get("parent") || null;
+
+  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
 
   const [name, setName] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
@@ -96,5 +97,13 @@ export default function CreateFolder() {
         {loading ? "Creating..." : "Create"}
       </button>
     </div>
+  );
+}
+
+export default function CreateFolder() {
+  return (
+    <Suspense fallback={<p className="p-6">Loading...</p>}>
+      <CreateFolderContent />
+    </Suspense>
   );
 }

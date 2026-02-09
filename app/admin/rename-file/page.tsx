@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { Suspense } from "react";
+
+export const dynamic = "force-dynamic";
 
 interface FileData {
   id: string;
@@ -12,13 +15,13 @@ interface FileData {
   folder_id: string;
 }
 
-export default function RenameFile() {
-    const { isAdmin } = useAuth();
-
-    if (!isAdmin) return <p className="p-6">Unauthorized</p>;
+function RenameFileContent() {
+  const { isAdmin } = useAuth();
   const params = useSearchParams();
   const id = params.get("id");
   const router = useRouter();
+
+  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
 
   const [newName, setNewName] = useState("");
   const [file, setFile] = useState<FileData | null>(null);
@@ -72,5 +75,13 @@ export default function RenameFile() {
         Save
       </button>
     </div>
+  );
+}
+
+export default function RenameFile() {
+  return (
+    <Suspense fallback={<p className="p-6">Loading...</p>}>
+      <RenameFileContent />
+    </Suspense>
   );
 }

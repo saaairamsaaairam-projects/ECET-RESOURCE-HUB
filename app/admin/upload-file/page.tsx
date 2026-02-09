@@ -4,14 +4,15 @@ import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/supabase";
+import { Suspense } from "react";
 
-export default function UploadFile() {
+function UploadFileContent() {
   const { isAdmin } = useAuth();
-
-  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
   const params = useSearchParams();
   const router = useRouter();
   const folder_id = params.get("folder");
+
+  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
 
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
@@ -87,5 +88,13 @@ export default function UploadFile() {
         {loading ? "Uploading..." : "Upload"}
       </button>
     </div>
+  );
+}
+
+export default function UploadFile() {
+  return (
+    <Suspense fallback={<p className="p-6">Loading...</p>}>
+      <UploadFileContent />
+    </Suspense>
   );
 }
