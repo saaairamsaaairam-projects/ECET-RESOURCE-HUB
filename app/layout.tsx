@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AdminProvider } from "@/context/AdminContext";
 import PageWrapper from "@/components/PageWrapper";
+import Navbar from "@/components/Navbar";
 
 
 const geistSans = Geist({
@@ -33,7 +34,10 @@ export default function RootLayout({
       >
         <AuthProvider>
           <AdminProvider>
-            <PageWrapper>{children}</PageWrapper>
+            <Navbar />
+            <div className="pt-20">
+              <PageWrapper>{children}</PageWrapper>
+            </div>
           </AdminProvider>
         </AuthProvider>
       </body>
