@@ -36,28 +36,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function getUserRole(userId: string) {
     try {
-      // Try to fetch from profiles table
+      console.log("🔍 Checking admin status for user:", userId);
+      
+      // Check admins table directly
       const { data, error } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", userId)
-        .single();
-
-      if (!error && data?.role === "admin") {
-        setIsAdmin(true);
-        return;
-      }
-
-      // Fallback: check admins table if profiles doesn't work or user is not admin
-      const { data: adminData } = await supabase
         .from("admins")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      setIsAdmin(!!adminData);
+      if (error) {
+        console.log("ℹ️ User not found in admins table (this is normal for non-admin users)");
+        setIsAdmin(false);
+        return;
+      }
+
+      if (data) {
+        console.log("✅ User is admin!");
+        setIsAdmin(true);
+      } else {
+        setIsAdmin(false);
+      }
     } catch (err) {
-      console.error("Error checking admin status:", err);
+      console.error("❌ Error checking admin status:", err);
       setIsAdmin(false);
     }
   }

@@ -12,46 +12,41 @@ async function checkAdmin(req: NextRequest): Promise<string | null> {
     const token = authHeader.replace("Bearer ", "");
 
     if (!token) {
-      console.error("No auth token provided");
+      console.error("❌ No auth token provided");
       return null;
     }
 
-    const { data } = await supabaseAdmin.auth.getUser(token);
-    if (!data?.user) {
-      console.error("User not found for token");
+    console.log("🔍 Validating token...");
+    const { data, error: userError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (userError || !data?.user) {
+      console.error("❌ Invalid token or user not found:", userError);
       return null;
     }
 
-    console.log("Checking admin status for user:", data.user.id);
+    console.log("✅ Token valid for user:", data.user.id);
 
-    // Try profiles table first
-    const { data: profile, error: profileError } = await supabaseAdmin
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-
-    if (profile?.role === "admin") {
-      console.log("User is admin via profiles table");
-      return data.user.id;
-    }
-
-    // Fallback to admins table
-    const { data: adminRecord, error: adminError } = await supabaseAdmin
+    // Check admins table directly (this is the authoritative source)
+    const { data: adminRecord, error: dbError } = await supabaseAdmin
       .from("admins")
-      .select("*")
+      .select("user_id")
       .eq("user_id", data.user.id)
       .single();
 
+    if (dbError) {
+      console.error("❌ Database query error:", dbError);
+      return null;
+    }
+
     if (adminRecord) {
-      console.log("User is admin via admins table");
+      console.log("✅ User is admin!");
       return data.user.id;
     }
 
-    console.error("User not found in admin tables. Profile error:", profileError, "Admin error:", adminError);
+    console.error("❌ User not found in admins table");
     return null;
   } catch (error) {
-    console.error("Admin check error:", error);
+    console.error("❌ Admin check error:", error);
     return null;
   }
 }
