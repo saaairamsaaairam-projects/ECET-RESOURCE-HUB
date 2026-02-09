@@ -20,7 +20,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
-      if (session?.user) verifyAdmin(session.user.id);
+      if (session?.user) getUserRole(session.user.id);
     });
   }, []);
 
@@ -31,17 +31,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     setUser(user || null);
 
-    if (user) verifyAdmin(user.id);
+    if (user) getUserRole(user.id);
   }
 
-  async function verifyAdmin(user_id: string) {
-    const { data } = await supabase
-      .from("admins")
-      .select("*")
-      .eq("user_id", user_id)
+  async function getUserRole(userId: string) {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
       .single();
 
-    setIsAdmin(!!data);
+    if (error) {
+      console.error("Error fetching user role:", error);
+      setIsAdmin(false);
+      return;
+    }
+
+    setIsAdmin(data?.role === "admin");
   }
 
   return (

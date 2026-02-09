@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/utils/supabase";
 
 export default function UploadFile() {
   const { isAdmin } = useAuth();
@@ -29,6 +30,14 @@ export default function UploadFile() {
     setLoading(true);
 
     try {
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token;
+
+      if (!token) {
+        alert("Authentication required");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("file", file);
       formData.append("folder_id", folder_id);
@@ -36,12 +45,15 @@ export default function UploadFile() {
       const response = await fetch("/api/admin/upload-file", {
         method: "POST",
         body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      const data = await response.json();
+      const data2 = await response.json();
 
       if (!response.ok) {
-        alert(`Upload failed: ${data.error}`);
+        alert(`Upload failed: ${data2.error}`);
         return;
       }
 

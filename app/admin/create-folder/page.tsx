@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/utils/supabase";
 
 export default function CreateFolder() {
   const { isAdmin } = useAuth();
@@ -25,6 +26,14 @@ export default function CreateFolder() {
     setLoading(true);
 
     try {
+      const { data } = await supabase.auth.getSession();
+      const token = data?.session?.access_token;
+
+      if (!token) {
+        alert("Authentication required");
+        return;
+      }
+
       const formData = new FormData();
       formData.append("name", name);
       formData.append("parent_id", parent_id || "");
@@ -35,12 +44,15 @@ export default function CreateFolder() {
       const response = await fetch("/api/admin/create-folder", {
         method: "POST",
         body: formData,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      const data = await response.json();
+      const data2 = await response.json();
 
       if (!response.ok) {
-        alert(`Error: ${data.error}`);
+        alert(`Error: ${data2.error}`);
         return;
       }
 

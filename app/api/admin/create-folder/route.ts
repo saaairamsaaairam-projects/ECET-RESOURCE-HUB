@@ -6,8 +6,35 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+async function checkAdmin(req: NextRequest): Promise<string | null> {
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace("Bearer ", "");
+
+  if (!token) return null;
+
+  const { data } = await supabaseAdmin.auth.getUser(token);
+  if (!data?.user) return null;
+
+  const { data: profile } = await supabaseAdmin
+    .from("profiles")
+    .select("role")
+    .eq("id", data.user.id)
+    .single();
+
+  if (profile?.role === "admin") {
+    return data.user.id;
+  }
+
+  return null;
+}
+
 export async function POST(req: NextRequest) {
   try {
+    const userId = await checkAdmin(req);
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
     const formData = await req.formData();
     const name = formData.get("name") as string;
     const parent_id = formData.get("parent_id") as string | null;
