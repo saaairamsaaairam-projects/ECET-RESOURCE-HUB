@@ -7,25 +7,42 @@ const supabaseAdmin = createClient(
 );
 
 async function checkAdmin(req: NextRequest): Promise<string | null> {
-  const authHeader = req.headers.get("authorization") || "";
-  const token = authHeader.replace("Bearer ", "");
+  try {
+    const authHeader = req.headers.get("authorization") || "";
+    const token = authHeader.replace("Bearer ", "");
 
-  if (!token) return null;
+    if (!token) return null;
 
-  const { data } = await supabaseAdmin.auth.getUser(token);
-  if (!data?.user) return null;
+    const { data } = await supabaseAdmin.auth.getUser(token);
+    if (!data?.user) return null;
 
-  const { data: profile } = await supabaseAdmin
-    .from("profiles")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
+    // Try profiles table first
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
 
-  if (profile?.role === "admin") {
-    return data.user.id;
+    if (profile?.role === "admin") {
+      return data.user.id;
+    }
+
+    // Fallback to admins table
+    const { data: adminRecord } = await supabaseAdmin
+      .from("admins")
+      .select("*")
+      .eq("user_id", data.user.id)
+      .single();
+
+    if (adminRecord) {
+      return data.user.id;
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Admin check error:", error);
+    return null;
   }
-
-  return null;
 }
 
 export async function POST(req: NextRequest) {
