@@ -5,6 +5,7 @@ import Link from "next/link";
 import { supabase } from "@/utils/supabase";
 import { motion } from "framer-motion";
 import { Search, BookOpen, FolderOpen, Sparkles, Download } from "lucide-react";
+import SpotlightSearch from "@/components/SpotlightSearch";
 
 interface FileType {
   id: string;
@@ -50,8 +51,9 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0f0e17] via-[#1a1823] to-[#0f0e17] text-white overflow-hidden">
+      <SpotlightSearch />
       
-      {/* Animated Background Blobs */}
+      {/* Animated Background Blobs - Enhanced */}
       <div className="fixed inset-0 -z-10">
         <motion.div
           animate={{
@@ -76,6 +78,19 @@ export default function HomePage() {
             ease: "easeInOut",
           }}
           className="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-violet-600 opacity-10 rounded-full blur-[120px]"
+        ></motion.div>
+
+        {/* Additional Floating Gradient Blobs */}
+        <motion.div
+          animate={{ y: [0, -40, 0], x: [0, 20, 0] }}
+          transition={{ repeat: Infinity, duration: 12 }}
+          className="absolute top-1/2 left-5 w-[300px] h-[300px] bg-fuchsia-600/20 rounded-full blur-[100px]"
+        ></motion.div>
+
+        <motion.div
+          animate={{ y: [0, 30, 0], x: [0, -30, 0] }}
+          transition={{ repeat: Infinity, duration: 14 }}
+          className="absolute bottom-1/3 right-1/3 w-[250px] h-[250px] bg-pink-500/15 rounded-full blur-[90px]"
         ></motion.div>
       </div>
 
@@ -175,6 +190,35 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-2">{category.name}</h3>
                 <p className="text-gray-400 text-sm">{category.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+      </section>
+
+      {/* ---------------------- SUBJECTS SECTION ---------------------- */}
+      <section className="px-6 py-20 max-w-7xl mx-auto">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <h2 className="text-4xl font-bold mb-12">Popular Subjects</h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {["Engineering Mathematics", "Physics", "Chemistry", "Programming", "Electronics", "Data Structures"].map((subject, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ scale: 1.03, translateY: -8 }}
+                transition={{ delay: 0.1 * i }}
+                viewport={{ once: true }}
+                className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl p-6 cursor-pointer hover:border-purple-400 hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-300 group"
+              >
+                <h3 className="text-xl font-semibold mb-2 group-hover:text-purple-300 transition">{subject}</h3>
+                <p className="text-sm text-gray-300">Explore study materials</p>
               </motion.div>
             ))}
           </div>
