@@ -1,55 +1,42 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { supabase } from "@/utils/supabase";
-import FolderCard from "@/components/FolderCard";
-import FileCard from "../../../components/FileCard";
-import Breadcrumb from "@/components/Breadcrumb";
 import { useAuth } from "@/context/AuthContext";
-import { getFolderPath } from "@/utils/folderUtils";
+import { supabase } from "@/utils/supabase";
+import Link from "next/link";
+import { motion } from "framer-motion";
+import {
+  FolderPlus,
+  FileUp,
+  FolderOpen,
+  File,
+  Eye,
+  Download,
+  ChevronRight,
+  Home,
+} from "lucide-react";
 import { useParams } from "next/navigation";
-
-interface Folder {
-  id: string;
-  name: string;
-  thumbnail?: string;
-  parent_id?: string | null;
-}
-
-interface FolderPageParams {
-  id: string;
-}
-
-interface FileType {
-  id: string;
-  file_name: string;
-  file_url: string;
-  folder_id: string;
-}
 
 export default function FolderPage() {
   const params = useParams();
-  const id = params?.id as string | undefined;
-  const [folder, setFolder] = useState<Folder | null>(null);
-  const [subfolders, setSubfolders] = useState<Folder[]>([]);
-  const [files, setFiles] = useState<FileType[]>([]);
-  const [path, setPath] = useState<Folder[]>([]);
-  const { isAdmin, user } = useAuth();
-
-  async function logout() {
-    await supabase.auth.signOut();
-    window.location.reload();
-  }
+  const folderId = params?.id as string;
+  
+  const [folder, setFolder] = useState<any>(null);
+  const [subfolders, setSubfolders] = useState<any[]>([]);
+  const [files, setFiles] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [breadcrumbPath, setBreadcrumbPath] = useState<any[]>([]);
+  const { isAdmin } = useAuth();
 
   useEffect(() => {
-    if (!id) return;
-    loadFolder(id);
-    loadSubfolders(id);
-    loadFiles(id);
-    loadPath(id);
-  }, [id]);
+    if (!folderId) return;
+    loadFolder();
+    loadSubfolders();
+    loadFiles();
+    loadBreadcrumb();
+  }, [folderId]);
 
-  async function loadFolder(folderId: string) {
+  async function loadFolder() {
     const { data } = await supabase
       .from("folders")
       .select("*")
@@ -59,7 +46,7 @@ export default function FolderPage() {
     setFolder(data);
   }
 
-  async function loadSubfolders(folderId: string) {
+  async function loadSubfolders() {
     const { data } = await supabase
       .from("folders")
       .select("*")
@@ -68,106 +55,228 @@ export default function FolderPage() {
     setSubfolders(data || []);
   }
 
-  async function loadFiles(folderId: string) {
+  async function loadFiles() {
     const { data } = await supabase
       .from("files")
       .select("*")
-      .eq("folder_id", folderId);
+      .eq("folder_id", folderId)
+      .order("created_at", { ascending: false });
 
     setFiles(data || []);
+    setLoading(false);
   }
 
-  async function loadPath(folderId: string) {
-    const p = await getFolderPath(folderId);
-    setPath(p);
+  async function loadBreadcrumb() {
+    const path = [];
+    let currentId = folderId;
+
+    while (currentId) {
+      const { data } = await supabase
+        .from("folders")
+        .select("*")
+        .eq("id", currentId)
+        .single();
+
+      if (data) {
+        path.unshift(data);
+        currentId = data.parent_id;
+      } else {
+        break;
+      }
+    }
+
+    setBreadcrumbPath(path);
   }
 
-  if (!folder) return <p className="p-6">Loading...</p>;
+  if (!folder) {
+    return (
+      <div className="min-h-screen bg-[#0f0e17] flex items-center justify-center text-white pt-20">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
 
   return (
-    <main className="min-h-screen bg-gray-100 p-6">
+    <div className="min-h-screen bg-[#0f0e17] pt-24 px-6 text-white relative overflow-hidden">
 
-      <Breadcrumb path={path} />
+      {/* FLOATING BLOBS */}
+      <motion.div
+        animate={{ y: [0, -40, 0], x: [0, 20, 0] }}
+        transition={{ repeat: Infinity, duration: 12 }}
+        className="absolute top-1/2 left-5 w-[300px] h-[300px] bg-purple-600/20 rounded-full blur-[100px]"
+      />
+      <motion.div
+        animate={{ y: [0, 30, 0], x: [0, -30, 0] }}
+        transition={{ repeat: Infinity, duration: 14 }}
+        className="absolute bottom-1/3 right-1/3 w-[250px] h-[250px] bg-fuchsia-600/15 rounded-full blur-[90px]"
+      />
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">{folder.name}</h1>
+      {/* BREADCRUMB */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative z-10 mb-8 flex items-center gap-2 text-gray-400 text-sm"
+      >
+        <Link href="/dashboard" className="hover:text-purple-300 transition flex items-center gap-1">
+          <Home size={16} /> Dashboard
+        </Link>
 
-        <div className="flex gap-2">
-          {user && (
-            <span className="text-gray-700 text-sm">
-              👤 {user.email}
-            </span>
-          )}
+        {breadcrumbPath.map((item, idx) => (
+          <div key={item.id} className="flex items-center gap-2">
+            <ChevronRight size={16} />
+            {idx === breadcrumbPath.length - 1 ? (
+              <span className="text-purple-300 font-semibold">{item.name}</span>
+            ) : (
+              <Link href={`/folder/${item.id}`} className="hover:text-purple-300 transition">
+                {item.name}
+              </Link>
+            )}
+          </div>
+        ))}
+      </motion.div>
 
-          {!isAdmin && !user && (
-            <a
-              href="/login"
-              className="px-3 py-1 bg-blue-600 text-white rounded-lg text-sm"
-            >
-              Login
-            </a>
-          )}
+      {/* PAGE TITLE */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative z-10 mb-12"
+      >
+        <h1 className="text-4xl md:text-5xl font-bold mb-2 bg-gradient-to-r from-purple-400 via-violet-400 to-purple-600 text-transparent bg-clip-text">
+          {folder.name}
+        </h1>
+        <p className="text-gray-300">
+          Explore subfolders and files inside this folder
+        </p>
+      </motion.div>
 
-          {isAdmin && (
-            <a
-              href={`/admin/rename-folder?id=${id}`}
-              className="px-3 py-1 bg-yellow-600 text-white rounded-lg text-sm"
-            >
-              Rename
-            </a>
-          )}
-
-          {user && (
-            <button
-              onClick={logout}
-              className="px-3 py-1 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700"
-            >
-              Logout
-            </button>
-          )}
-        </div>
-      </div>
-
+      {/* ADMIN ACTIONS */}
       {isAdmin && (
-        <div className="flex gap-2 mb-6">
-          <a
-            href={`/admin/create-folder?parent=${id}`}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg inline-block"
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="relative z-10 flex gap-4 mb-8 flex-wrap"
+        >
+          <Link
+            href={`/admin/create-folder?parent=${folderId}`}
+            className="px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-lg shadow-lg hover:opacity-90 transition flex items-center gap-2 font-semibold"
           >
-            + Add Subfolder
-          </a>
-          <a
-            href={`/admin/upload-file?folder=${id}`}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg inline-block"
+            <FolderPlus size={20} /> Add Subfolder
+          </Link>
+
+          <Link
+            href={`/admin/upload-file?folder=${folderId}`}
+            className="px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-fuchsia-700 rounded-lg shadow-lg hover:opacity-90 transition flex items-center gap-2 font-semibold"
           >
-            + Upload File
-          </a>
+            <FileUp size={20} /> Upload File
+          </Link>
+        </motion.div>
+      )}
+
+      {/* SUBFOLDERS SECTION */}
+      {subfolders.length > 0 && (
+        <div className="relative z-10 mb-12">
+          <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-purple-300 to-purple-500 text-transparent bg-clip-text">
+            Subfolders
+          </h2>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {subfolders.map((subfolder, i) => (
+              <motion.div
+                key={subfolder.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                whileHover={{ scale: 1.03, translateY: -5 }}
+                className="group"
+              >
+                <Link href={`/folder/${subfolder.id}`}>
+                  <div className="p-6 bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl hover:border-purple-400/50 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer transition-all duration-300 h-full flex flex-col items-start">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:shadow-purple-500/40 transition mb-4">
+                      <FolderOpen className="w-6 h-6 text-white" />
+                    </div>
+                    <h3 className="text-xl font-semibold group-hover:text-purple-300 transition">
+                      {subfolder.name}
+                    </h3>
+                    <p className="text-gray-400 text-sm mt-2">Subfolder</p>
+                  </div>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Subfolders Section */}
-      <h2 className="text-xl font-bold mt-8 mb-4">Subfolders</h2>
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mb-8">
-        {subfolders.length > 0 ? (
-          subfolders.map(folder => (
-            <FolderCard key={folder.id} folder={folder} />
-          ))
-        ) : (
-          <p className="text-gray-500">No subfolders yet</p>
-        )}
-      </div>
+      {/* FILES SECTION */}
+      <div className="relative z-10">
+        <h2 className="text-3xl font-bold mb-6 bg-gradient-to-r from-fuchsia-300 to-fuchsia-500 text-transparent bg-clip-text">
+          Files
+        </h2>
 
-      {/* Files Section */}
-      <h2 className="text-xl font-bold mt-8 mb-4">Files</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-        {files.length > 0 ? (
-          files.map(file => (
-            <FileCard key={file.id} file={file} />
-          ))
+        {loading ? (
+          <div className="flex justify-center py-12">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 2, repeat: Infinity }}
+              className="w-8 h-8 border-2 border-fuchsia-400 border-t-transparent rounded-full"
+            />
+          </div>
+        ) : files.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {files.map((file, i) => (
+              <motion.div
+                key={file.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.05 }}
+                whileHover={{ scale: 1.03, translateY: -5 }}
+                className="group"
+              >
+                <div className="p-6 bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl hover:border-fuchsia-400/50 hover:shadow-2xl hover:shadow-fuchsia-500/20 cursor-pointer transition-all duration-300 h-full flex flex-col">
+                  <div className="w-12 h-12 bg-gradient-to-br from-fuchsia-500 to-pink-600 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:shadow-fuchsia-500/40 transition mb-4">
+                    <File className="w-6 h-6 text-white" />
+                  </div>
+
+                  <h3 className="text-lg font-semibold break-words mb-4 flex-grow group-hover:text-fuchsia-300 transition">
+                    {file.file_name}
+                  </h3>
+
+                  <div className="flex gap-3 flex-wrap">
+                    <a
+                      href={file.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-4 py-2 bg-purple-600/40 hover:bg-purple-600/60 rounded-lg transition text-sm font-semibold"
+                    >
+                      <Eye size={16} /> Preview
+                    </a>
+
+                    <a
+                      href={file.file_url}
+                      download
+                      className="flex items-center gap-2 px-4 py-2 bg-fuchsia-600/40 hover:bg-fuchsia-600/60 rounded-lg transition text-sm font-semibold"
+                    >
+                      <Download size={16} /> Download
+                    </a>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         ) : (
-          <p className="text-gray-500">No files yet</p>
+          <div className="text-center py-12">
+            <p className="text-gray-400 text-lg">
+              No files uploaded yet.{" "}
+              {isAdmin && "Upload your first file to get started!"}
+            </p>
+          </div>
         )}
       </div>
-    </main>
+    </div>
   );
 }
