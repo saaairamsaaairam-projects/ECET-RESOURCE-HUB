@@ -20,6 +20,7 @@ import { useParams } from "next/navigation";
 
 import Breadcrumb from "@/components/Breadcrumb";
 import ConfirmModal from "@/components/ConfirmModal";
+import DragDropUploader from "@/components/DragDropUploader";
 export default function FolderPage() {
   const params = useParams();
   const folderId = params?.id as string;
@@ -228,7 +229,7 @@ export default function FolderPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="relative z-10 flex gap-4 mb-8 flex-wrap"
+          className="relative z-10 flex gap-4 mb-12 flex-wrap"
         >
           <Link
             href={`/admin/create-folder?parent=${folderId}`}
@@ -243,6 +244,18 @@ export default function FolderPage() {
           >
             <FileUp size={20} /> Upload File
           </Link>
+        </motion.div>
+      )}
+
+      {/* DRAG DROP UPLOADER */}
+      {isAdmin && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="relative z-10 mb-12"
+        >
+          <DragDropUploader folderId={folderId} onUploadComplete={loadFiles} />
         </motion.div>
       )}
 
