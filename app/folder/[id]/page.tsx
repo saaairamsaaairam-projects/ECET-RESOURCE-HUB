@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useParams } from "next/navigation";
 
+import Breadcrumb from "@/components/Breadcrumb";
 export default function FolderPage() {
   const params = useParams();
   const folderId = params?.id as string;
@@ -139,6 +140,10 @@ export default function FolderPage() {
         ))}
       </motion.div>
 
+        <Breadcrumb items={breadcrumbPath.map((item) => ({
+          label: item.name,
+          href: `/folder/${item.id}`
+        }))} />
       {/* PAGE TITLE */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}

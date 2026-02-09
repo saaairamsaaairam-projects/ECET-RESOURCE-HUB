@@ -1,37 +1,38 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronRight, Home } from "lucide-react";
+import { motion } from "framer-motion";
 
-interface Folder {
-  id: string;
-  name: string;
-}
-
-export default function Breadcrumb({ path }: { path: Folder[] }) {
+export default function Breadcrumb({ items }: { items: any[] }) {
   return (
-    <div className="text-sm text-gray-600 mb-4 flex items-center flex-wrap">
-
-      <Link href="/" className="text-blue-600 hover:underline">
-        Dashboard
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-2 text-gray-400 mb-8 text-sm flex-wrap"
+    >
+      <Link
+        href="/dashboard"
+        className="hover:text-purple-300 transition font-medium flex items-center gap-1"
+      >
+        <Home size={16} /> Dashboard
       </Link>
 
-      {path.map((folder, index) => (
-        <span key={folder.id} className="flex items-center">
-          
-          <span className="mx-2 text-gray-500">/</span>
-
-          <Link
-            href={`/folder/${folder.id}`}
-            className={`hover:underline ${
-              index === path.length - 1 ? "font-semibold text-black" : "text-blue-600"
-            }`}
-          >
-            {folder.name}
-          </Link>
-
-        </span>
+      {items.map((item, index) => (
+        <div key={index} className="flex items-center gap-2">
+          <ChevronRight size={16} className="text-gray-500" />
+          {index === items.length - 1 ? (
+            <span className="text-purple-300 font-semibold">{item.label}</span>
+          ) : (
+            <Link
+              href={item.href}
+              className="hover:text-purple-300 transition font-medium"
+            >
+              {item.label}
+            </Link>
+          )}
+        </div>
       ))}
-
-    </div>
+    </motion.div>
   );
 }
