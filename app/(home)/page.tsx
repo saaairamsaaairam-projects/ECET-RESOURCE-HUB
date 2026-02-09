@@ -140,7 +140,7 @@ export default function HomePage() {
               Get Started
             </button>
           </Link>
-          <Link href="/dashboard">
+          <Link href="/">
             <button className="px-8 py-3 bg-white/10 border border-white/20 rounded-lg font-semibold hover:bg-white/20 transition">
               Explore
             </button>
