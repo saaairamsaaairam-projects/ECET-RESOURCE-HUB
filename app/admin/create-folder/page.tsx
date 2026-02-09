@@ -11,12 +11,11 @@ function CreateFolderContent() {
   const router = useRouter();
   const params = useSearchParams();
   const parent_id = params.get("parent") || null;
-
-  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
-
   const [name, setName] = useState("");
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+
+  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
 
   async function createFolder() {
     if (!name.trim()) {

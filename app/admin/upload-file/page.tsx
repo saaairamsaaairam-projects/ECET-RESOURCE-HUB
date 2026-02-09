@@ -11,11 +11,10 @@ function UploadFileContent() {
   const params = useSearchParams();
   const router = useRouter();
   const folder_id = params.get("folder");
-
-  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
-
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
+
+  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
 
   async function upload() {
     if (!file) {

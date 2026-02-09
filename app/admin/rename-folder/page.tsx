@@ -12,12 +12,11 @@ function RenameFolderContent() {
   const { isAdmin } = useAuth();
   const params = useSearchParams();
   const router = useRouter();
-
-  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
-
   const id = params.get("id");
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
+
+  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
 
   useEffect(() => {
     loadFolder();

@@ -20,12 +20,11 @@ function RenameFileContent() {
   const params = useSearchParams();
   const id = params.get("id");
   const router = useRouter();
-
-  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
-
   const [newName, setNewName] = useState("");
   const [file, setFile] = useState<FileData | null>(null);
   const [loading, setLoading] = useState(true);
+
+  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
 
   useEffect(() => {
     loadFile();
