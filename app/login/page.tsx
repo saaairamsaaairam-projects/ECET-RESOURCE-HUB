@@ -37,7 +37,7 @@ export default function LoginPage() {
       if (data.session) {
         // Wait a moment for auth state to sync
         await new Promise(resolve => setTimeout(resolve, 500));
-        router.push("/");
+        router.push("/dashboard");
       } else {
         setError("Login failed. Please try again.");
         setLoading(false);

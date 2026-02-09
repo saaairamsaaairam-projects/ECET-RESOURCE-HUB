@@ -53,8 +53,9 @@ export default function SignupPage() {
           console.error("Profile insert error:", profileError);
         }
 
-        // Redirect to login page
-        router.push("/login?signup=success");
+        // Redirect to dashboard (immediate login after signup)
+        await new Promise(resolve => setTimeout(resolve, 500));
+        router.push("/dashboard");
       } else {
         setError("Signup failed. Please try again.");
         setLoading(false);
