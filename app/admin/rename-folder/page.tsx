@@ -3,8 +3,13 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase";
+import { useAuth } from "@/context/AuthContext";
 
 export default function RenameFolder() {
+  const { isAdmin } = useAuth();
+
+  if (!isAdmin) return <p className="p-6">Unauthorized</p>;
+
   const params = useSearchParams();
   const router = useRouter();
 
@@ -51,12 +56,9 @@ export default function RenameFolder() {
 
       <button
         onClick={rename}
-      import { useAuth } from "@/context/AuthContext";
         className="px-4 py-2 bg-yellow-600 text-white rounded"
-      export default function RenameFolder() {
-        const { isAdmin } = useAuth();
+      >
         Save
-        if (!isAdmin) return <p className="p-6">Unauthorized</p>;
       </button>
     </div>
   );
