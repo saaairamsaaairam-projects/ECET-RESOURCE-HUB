@@ -1,0 +1,66 @@
+import { createClient } from "@supabase/supabase-js";
+import { NextRequest, NextResponse } from "next/server";
+
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function POST(req: NextRequest) {
+  try {
+    const formData = await req.formData();
+    const name = formData.get("name") as string;
+    const parent_id = formData.get("parent_id") as string | null;
+    const file = formData.get("file") as File | null;
+
+    if (!name) {
+      return NextResponse.json({ error: "Folder name required" }, { status: 400 });
+    }
+
+    let thumbnailUrl = null;
+
+    if (file) {
+      const fileName = `${crypto.randomUUID()}-${file.name}`;
+
+      const { data, error: uploadError } = await supabaseAdmin.storage
+        .from("folder_thumbnails")
+        .upload(fileName, file);
+
+      if (uploadError) {
+        console.error("Upload failed:", uploadError);
+        return NextResponse.json(
+          { error: `Upload failed: ${uploadError.message}` },
+          { status: 500 }
+        );
+      }
+
+      const { data: publicUrlData } = supabaseAdmin.storage
+        .from("folder_thumbnails")
+        .getPublicUrl(fileName);
+
+      thumbnailUrl = publicUrlData.publicUrl;
+    }
+
+    const { error: insertError } = await supabaseAdmin.from("folders").insert({
+      name,
+      parent_id: parent_id || null,
+      thumbnail: thumbnailUrl,
+    });
+
+    if (insertError) {
+      console.error("Folder creation failed:", insertError);
+      return NextResponse.json(
+        { error: `Folder creation failed: ${insertError.message}` },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("API error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
