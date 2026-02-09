@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { supabase } from "@/utils/supabase";
 import { Suspense } from "react";
 
 function CreateFolderContent() {
   const { isAdmin } = useAuth();
+  const { addToast } = useToast();
   const router = useRouter();
   const params = useSearchParams();
   const parent_id = params.get("parent") || null;
@@ -19,7 +21,7 @@ function CreateFolderContent() {
 
   async function createFolder() {
     if (!name.trim()) {
-      alert("Please enter a folder name");
+      addToast("Please enter a folder name", "warning");
       return;
     }
 
@@ -30,7 +32,7 @@ function CreateFolderContent() {
       const token = data?.session?.access_token;
 
       if (!token) {
-        alert("Authentication required");
+        addToast("Authentication required", "error");
         return;
       }
 
@@ -52,15 +54,15 @@ function CreateFolderContent() {
       const data2 = await response.json();
 
       if (!response.ok) {
-        alert(`Error: ${data2.error}`);
+        addToast(`Error: ${data2.error}`, "error");
         return;
       }
 
-      console.log("✅ Folder created successfully");
+      addToast("Folder created successfully!", "success");
       router.push(parent_id ? `/folder/${parent_id}` : "/");
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to create folder");
+      addToast("Failed to create folder", "error");
     } finally {
       setLoading(false);
     }

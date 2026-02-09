@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { supabase } from "@/utils/supabase";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -29,6 +30,7 @@ export default function FolderPage() {
   const [loading, setLoading] = useState(true);
   const [breadcrumbPath, setBreadcrumbPath] = useState<any[]>([]);
   const { isAdmin } = useAuth();
+  const { addToast } = useToast();
   const [renameTarget, setRenameTarget] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -114,49 +116,61 @@ export default function FolderPage() {
   async function confirmRename() {
     if (!renameTarget) return;
 
-    if (renameTarget.type === "file") {
-      await supabase
-        .from("files")
-        .update({ file_name: renameValue })
-        .eq("id", renameTarget.item.id);
-      loadFiles();
-    } else {
-      await supabase
-        .from("folders")
-        .update({ name: renameValue })
-        .eq("id", renameTarget.item.id);
-      loadSubfolders();
-    }
+    try {
+      if (renameTarget.type === "file") {
+        await supabase
+          .from("files")
+          .update({ file_name: renameValue })
+          .eq("id", renameTarget.item.id);
+        loadFiles();
+        addToast(`File renamed to "${renameValue}"`, "success");
+      } else {
+        await supabase
+          .from("folders")
+          .update({ name: renameValue })
+          .eq("id", renameTarget.item.id);
+        loadSubfolders();
+        addToast(`Folder renamed to "${renameValue}"`, "success");
+      }
 
-    setRenameTarget(null);
+      setRenameTarget(null);
+    } catch (error) {
+      addToast("Failed to rename item", "error");
+    }
   }
 
   async function confirmDelete() {
     if (!deleteTarget) return;
 
-    if (deleteTarget.type === "file") {
-      await supabase
-        .from("files")
-        .delete()
-        .eq("id", deleteTarget.item.id);
-      loadFiles();
-    } else {
-      // SAFETY CHECK: prevent deleting root folders
-      if (!deleteTarget.item.parent_id) {
-        alert("You cannot delete a root folder!");
-        setDeleteTarget(null);
-        return;
+    try {
+      if (deleteTarget.type === "file") {
+        await supabase
+          .from("files")
+          .delete()
+          .eq("id", deleteTarget.item.id);
+        loadFiles();
+        addToast("File deleted successfully", "success");
+      } else {
+        // SAFETY CHECK: prevent deleting root folders
+        if (!deleteTarget.item.parent_id) {
+          addToast("You cannot delete a root folder!", "warning");
+          setDeleteTarget(null);
+          return;
+        }
+
+        await supabase
+          .from("folders")
+          .delete()
+          .eq("id", deleteTarget.item.id);
+
+        loadSubfolders();
+        addToast("Folder deleted successfully", "success");
       }
 
-      await supabase
-        .from("folders")
-        .delete()
-        .eq("id", deleteTarget.item.id);
-
-      loadSubfolders();
+      setDeleteTarget(null);
+    } catch (error) {
+      addToast("Failed to delete item", "error");
     }
-
-    setDeleteTarget(null);
   }
 
   if (!folder) {

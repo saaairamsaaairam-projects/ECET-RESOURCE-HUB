@@ -3,11 +3,13 @@
 import { useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
 import { supabase } from "@/utils/supabase";
 import { Suspense } from "react";
 
 function UploadFileContent() {
   const { isAdmin } = useAuth();
+  const { addToast } = useToast();
   const params = useSearchParams();
   const router = useRouter();
   const folder_id = params.get("folder");
@@ -18,12 +20,12 @@ function UploadFileContent() {
 
   async function upload() {
     if (!file) {
-      alert("Please select a file.");
+      addToast("Please select a file", "warning");
       return;
     }
 
     if (!folder_id) {
-      alert("No folder specified!");
+      addToast("No folder specified!", "error");
       return;
     }
 
@@ -34,7 +36,7 @@ function UploadFileContent() {
       const token = data?.session?.access_token;
 
       if (!token) {
-        alert("Authentication required");
+        addToast("Authentication required", "error");
         return;
       }
 
@@ -53,15 +55,15 @@ function UploadFileContent() {
       const data2 = await response.json();
 
       if (!response.ok) {
-        alert(`Upload failed: ${data2.error}`);
+        addToast(`Upload failed: ${data2.error}`, "error");
         return;
       }
 
-      console.log("✅ File uploaded successfully");
+      addToast("File uploaded successfully!", "success");
       router.push(`/folder/${folder_id}`);
     } catch (error) {
       console.error("Error:", error);
-      alert("Failed to upload file");
+      addToast("Failed to upload file", "error");
     } finally {
       setLoading(false);
     }
