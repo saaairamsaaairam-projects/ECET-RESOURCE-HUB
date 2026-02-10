@@ -6,6 +6,7 @@ import { useToast } from "@/context/ToastContext";
 import { supabase } from "@/utils/supabase";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import {
   FolderPlus,
   FileUp,
@@ -25,6 +26,7 @@ import ConfirmModal from "@/components/ConfirmModal";
 import DragDropUploader from "@/components/DragDropUploader";
 export default function FolderPage() {
   const params = useParams();
+  const router = useRouter();
   const folderId = params?.id as string;
   
   const [folder, setFolder] = useState<any>(null);
@@ -40,11 +42,22 @@ export default function FolderPage() {
 
   useEffect(() => {
     if (!folderId) return;
+    
+    // Check if folderId is a UUID or a slug
+    // UUIDs match pattern: 8-4-4-4-12 hex digits with hyphens
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(folderId);
+    
+    if (!isUUID) {
+      // It's a slug, redirect to the redirect page to resolve to actual UUID
+      router.replace(`/redirect?key=${folderId}`);
+      return;
+    }
+    
     loadFolder();
     loadSubfolders();
     loadFiles();
     loadBreadcrumb();
-  }, [folderId]);
+  }, [folderId, router]);
 
   async function loadFolder() {
     const { data } = await supabase
