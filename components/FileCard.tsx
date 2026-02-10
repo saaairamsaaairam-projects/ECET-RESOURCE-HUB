@@ -2,7 +2,8 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/supabase";
-import { getFileIcon } from "@/utils/getFileIcon";
+import { getFileTypeInfo } from "@/utils/getFileIcon";
+import PdfThumbnail from "@/components/PdfThumbnail";
 import { useState } from "react";
 
 interface FileType {
@@ -17,8 +18,10 @@ export default function FileCard({ file }: { file: FileType }) {
   const [showPreview, setShowPreview] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  const isImage = /\.(jpg|jpeg|png|gif|webp)$/i.test(file.file_name);
-  const isPDF = /\.pdf$/i.test(file.file_name);
+  const { type, icon } = getFileTypeInfo(file.file_name);
+  const isImage = type === "image";
+  const isPDF = type === "pdf";
+  const isVideo = type === "video";
 
   async function deleteFile() {
     if (!confirm("Delete this file?")) return;
@@ -58,14 +61,24 @@ export default function FileCard({ file }: { file: FileType }) {
     <>
       <div className="bg-white p-4 rounded-xl shadow hover:shadow-lg transition relative">
 
-        {/* File icon */}
-        <div className="flex justify-center mb-3">
-          <img
-            src={getFileIcon(file.file_name)}
-            alt="icon"
-            width="50"
-            height="50"
-          />
+        {/* File thumbnail / icon */}
+        <div className="flex justify-center mb-3 w-full">
+          {isPDF ? (
+            <PdfThumbnail url={file.file_url} />
+          ) : isImage ? (
+            <img src={file.file_url} alt="preview" className="w-full h-32 object-cover rounded-lg mb-3" />
+          ) : (
+            <div className="flex flex-col items-center">
+              <img src={icon} alt="icon" width={56} height={56} className="opacity-90 mb-3" />
+              {isVideo && <div className="-mt-14">
+                <div className="bg-black bg-opacity-40 rounded-full p-2">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 5v14l11-7L8 5z" fill="#fff" />
+                  </svg>
+                </div>
+              </div>}
+            </div>
+          )}
         </div>
 
         {/* File name */}

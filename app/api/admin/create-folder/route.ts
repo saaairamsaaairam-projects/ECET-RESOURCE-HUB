@@ -91,11 +91,11 @@ export async function POST(req: NextRequest) {
       thumbnailUrl = publicUrlData.publicUrl;
     }
 
-    const { error: insertError } = await supabaseAdmin.from("folders").insert({
+    const { data: folderData, error: insertError } = await supabaseAdmin.from("folders").insert({
       name,
       parent_id: parent_id || null,
       thumbnail: thumbnailUrl,
-    });
+    }).select("id");
 
     if (insertError) {
       console.error("Folder creation failed:", insertError);
@@ -105,7 +105,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    return NextResponse.json({ success: true });
+    const folderId = folderData?.[0]?.id;
+    return NextResponse.json({ success: true, folderId });
   } catch (error) {
     console.error("API error:", error);
     return NextResponse.json(

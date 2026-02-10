@@ -29,7 +29,15 @@ export default function Navbar() {
             {["Home", "MPC", "Branch", "Tools"].map((item) => (
               <Link
                 key={item}
-                href={item === "Home" ? "/" : `/folder/${item.toLowerCase()}`}
+                href={
+                  item === "Home"
+                    ? "/"
+                    : item === "Branch"
+                    ? "/branches"
+                    : item === "MPC"
+                    ? "/mpc"
+                    : `/folder/${item.toLowerCase()}`
+                }
                 className="hover:text-purple-400 transition duration-200"
               >
                 {item}
@@ -108,11 +116,11 @@ export default function Navbar() {
               <Link href="/" onClick={() => setOpen(false)}>
                 Home
               </Link>
-              <Link href="/folder/mpc" onClick={() => setOpen(false)}>
+              <Link href="/mpc" onClick={() => setOpen(false)}>
                 MPC
               </Link>
-              <Link href="/folder/branch" onClick={() => setOpen(false)}>
-                Branch
+                <Link href="/branches" onClick={() => setOpen(false)}>
+                  Branch
               </Link>
               <Link href="/tools" onClick={() => setOpen(false)}>
                 Tools

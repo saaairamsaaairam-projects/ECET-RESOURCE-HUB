@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { FolderOpen, Plus } from "lucide-react";
+import { FolderOpen, Plus, Edit2, Trash2 } from "lucide-react";
 import { supabase } from "@/utils/supabase";
 import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/context/ToastContext";
+import ConfirmModal from "@/components/ConfirmModal";
 
 interface Folder {
   id: string;
@@ -18,28 +20,78 @@ export default function DashboardPage() {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const { user, isAdmin } = useAuth();
+  const { addToast } = useToast();
+  const [renameTarget, setRenameTarget] = useState<Folder | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [deleteTarget, setDeleteTarget] = useState<Folder | null>(null);
 
   useEffect(() => {
-    // Public users can now load folders (no login required)
-    const loadFolders = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("folders")
-          .select("*")
-          .is("parent_id", null); // ONLY root folders
-
-        if (!error && data) {
-          setFolders(data);
-        }
-      } catch (err) {
-        console.error("Error loading folders:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     loadFolders();
   }, []);
+
+  async function loadFolders() {
+    try {
+      const { data, error } = await supabase
+        .from("folders")
+        .select("*")
+        .is("parent_id", null); // ONLY root folders
+
+      if (!error && data) {
+        setFolders(data);
+      }
+    } catch (err) {
+      console.error("Error loading folders:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function startRename(folder: Folder) {
+    setRenameTarget(folder);
+    setRenameValue(folder.name);
+  }
+
+  function startDelete(folder: Folder) {
+    setDeleteTarget(folder);
+  }
+
+  async function confirmRename() {
+    if (!renameTarget) return;
+    try {
+      await supabase
+        .from("folders")
+        .update({ name: renameValue })
+        .eq("id", renameTarget.id);
+      
+      addToast(`Folder renamed to "${renameValue}"`, "success");
+      setRenameTarget(null);
+      loadFolders();
+    } catch (error) {
+      addToast("Failed to rename folder", "error");
+    }
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget) return;
+    try {
+      // Prevent deleting root folders (they should have no parent)
+      if (!deleteTarget.parent_id) {
+        // This is a root folder, but we're on dashboard so parent_id is null anyway
+        // We can still delete it if needed
+      }
+
+      await supabase
+        .from("folders")
+        .delete()
+        .eq("id", deleteTarget.id);
+
+      addToast("Folder deleted successfully", "success");
+      setDeleteTarget(null);
+      loadFolders();
+    } catch (error) {
+      addToast("Failed to delete folder", "error");
+    }
+  }
 
   return (
     <div className="min-h-screen bg-[#0f0e17] pt-24 px-6 text-white relative overflow-hidden">
@@ -70,13 +122,13 @@ export default function DashboardPage() {
         </p>
       </motion.div>
 
-      {/* ADMIN CREATE FOLDER BUTTON */}
+      {/* ADMIN TOOLS */}
       {isAdmin && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.5 }}
-          className="relative z-10 mb-8"
+          className="relative z-10 mb-8 flex gap-4 flex-wrap"
         >
           <Link
             href="/admin/create-folder"
@@ -84,6 +136,13 @@ export default function DashboardPage() {
           >
             <Plus size={20} />
             Create New Folder
+          </Link>
+          <Link
+            href="/admin/bulk-folder-create"
+            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-lg hover:opacity-90 transition shadow-lg shadow-blue-500/30 font-semibold"
+          >
+            <Plus size={20} />
+            Bulk Create Folders
           </Link>
         </motion.div>
       )}
@@ -98,7 +157,7 @@ export default function DashboardPage() {
               className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full"
             />
           </div>
-        ) : folders.length > 0 ? (
+        ) : (folders.length > 0 ? (
           folders.map((folder, i) => (
             <motion.div
               key={folder.id}
@@ -108,21 +167,48 @@ export default function DashboardPage() {
               whileHover={{ scale: 1.03, translateY: -5 }}
               className="group"
             >
-              <Link href={`/folder/${folder.id}`}>
-                <div
-                  className="p-6 bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl 
-                  hover:border-purple-400/50 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer 
-                  transition-all duration-300 h-full flex flex-col items-start"
-                >
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:shadow-purple-500/40 transition mb-4">
-                    <FolderOpen className="w-6 h-6 text-white" />
-                  </div>
-                  <h2 className="text-xl font-semibold group-hover:text-purple-300 transition">
-                    {folder.name}
-                  </h2>
-                  <p className="text-gray-400 text-sm mt-2">Study Materials</p>
+              <div
+                className="p-6 bg-white/10 backdrop-blur-xl border border-white/10 rounded-xl 
+                hover:border-purple-400/50 hover:shadow-2xl hover:shadow-purple-500/20 cursor-pointer 
+                transition-all duration-300 h-full flex flex-col"
+              >
+                <div className="flex-1">
+                  <Link href={`/folder/${folder.id}`}>
+                    <div>
+                      <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-fuchsia-600 rounded-lg flex items-center justify-center group-hover:shadow-lg group-hover:shadow-purple-500/40 transition mb-4">
+                        <FolderOpen className="w-6 h-6 text-white" />
+                      </div>
+                      <h2 className="text-xl font-semibold group-hover:text-purple-300 transition">
+                        {folder.name}
+                      </h2>
+                      <p className="text-gray-400 text-sm mt-2">Study Materials</p>
+                    </div>
+                  </Link>
                 </div>
-              </Link>
+
+                {isAdmin && (
+                  <div className="mt-4 pt-4 border-t border-white/10 flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        startRename(folder);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 text-blue-300 hover:text-blue-200 hover:bg-blue-500/20 text-sm bg-white/5 px-3 py-2 rounded transition font-semibold"
+                    >
+                      <Edit2 size={16} /> Rename
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        startDelete(folder);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 text-sm bg-white/5 px-3 py-2 rounded transition font-semibold"
+                    >
+                      <Trash2 size={16} /> Delete
+                    </button>
+                  </div>
+                )}
+              </div>
             </motion.div>
           ))
         ) : (
@@ -132,7 +218,7 @@ export default function DashboardPage() {
               {isAdmin && "Create your first folder to get started!"}
             </p>
           </div>
-        )}
+        ))}
       </div>
 
       {/* FOOTER STATS */}
@@ -149,6 +235,32 @@ export default function DashboardPage() {
           </p>
         </motion.div>
       )}
+
+      {/* RENAME MODAL */}
+      <ConfirmModal
+        open={!!renameTarget}
+        text={
+          <div>
+            <p className="mb-3">Enter new folder name:</p>
+            <input
+              className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg outline-none text-white"
+              value={renameValue}
+              onChange={(e) => setRenameValue(e.target.value)}
+              autoFocus
+            />
+          </div>
+        }
+        onConfirm={confirmRename}
+        onCancel={() => setRenameTarget(null)}
+      />
+
+      {/* DELETE MODAL */}
+      <ConfirmModal
+        open={!!deleteTarget}
+        text={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }
