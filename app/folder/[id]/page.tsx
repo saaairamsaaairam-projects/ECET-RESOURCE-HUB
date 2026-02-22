@@ -17,20 +17,26 @@ import {
   Home,
   Edit2,
   Trash2,
+  X,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 
 import Breadcrumb from "@/components/Breadcrumb";
 import ConfirmModal from "@/components/ConfirmModal";
 import DragDropUploader from "@/components/DragDropUploader";
+import SubjectTabs from "@/components/subject/SubjectTabs";
+
+// SubjectTabs has been moved to `components/subject/SubjectTabs.tsx` and is imported above
 export default function FolderPage() {
   const params = useParams();
   const folderId = params?.id as string;
+  const [resolvedFolderId, setResolvedFolderId] = useState<string | null>(null);
   
   const [folder, setFolder] = useState<any>(null);
   const [subfolders, setSubfolders] = useState<any[]>([]);
   const [files, setFiles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showPractice, setShowPractice] = useState(false);
   const [breadcrumbPath, setBreadcrumbPath] = useState<any[]>([]);
   const { isAdmin } = useAuth();
   const { addToast } = useToast();
@@ -40,36 +46,58 @@ export default function FolderPage() {
 
   useEffect(() => {
     if (!folderId) return;
-    loadFolder();
-    loadSubfolders();
-    loadFiles();
-    loadBreadcrumb();
+    // If the param is a slug (not a UUID), resolve it to an ID first
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    (async () => {
+      if (!uuidRegex.test(folderId)) {
+        const { data } = await supabase
+          .from("folders")
+          .select("id")
+          .eq("slug", folderId)
+          .single();
+
+        if (data?.id) {
+          setResolvedFolderId(data.id);
+        }
+      }
+
+      // Load content (functions will pick resolvedFolderId when set)
+      await loadFolder();
+      await loadSubfolders();
+      await loadFiles();
+      await loadBreadcrumb();
+    })();
   }, [folderId]);
 
   async function loadFolder() {
+    const idToUse = resolvedFolderId || folderId;
     const { data } = await supabase
       .from("folders")
       .select("*")
-      .eq("id", folderId)
+      .eq("id", idToUse)
       .single();
 
     setFolder(data);
+    setShowPractice(true); // Always show practice tabs
   }
 
   async function loadSubfolders() {
+    const idToUse = resolvedFolderId || folderId;
     const { data } = await supabase
       .from("folders")
       .select("*")
-      .eq("parent_id", folderId);
+      .eq("parent_id", idToUse);
 
     setSubfolders(data || []);
   }
 
   async function loadFiles() {
+    const idToUse = resolvedFolderId || folderId;
     const { data } = await supabase
       .from("files")
       .select("*")
-      .eq("folder_id", folderId)
+      .eq("folder_id", idToUse)
       .order("created_at", { ascending: false });
 
     setFiles(data || []);
@@ -78,7 +106,7 @@ export default function FolderPage() {
 
   async function loadBreadcrumb() {
     const path = [];
-    let currentId = folderId;
+    let currentId = resolvedFolderId || folderId;
 
     while (currentId) {
       const { data } = await supabase
@@ -224,6 +252,13 @@ export default function FolderPage() {
           Explore subfolders and files inside this folder
         </p>
       </motion.div>
+
+      {/* Practice Bits Link */}
+      {showPractice && (
+        <div className="relative z-10 mb-8">
+          <SubjectTabs folderId={resolvedFolderId || folderId} />
+        </div>
+      )}
 
       {/* ADMIN ACTIONS */}
       {isAdmin && (

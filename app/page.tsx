@@ -133,12 +133,13 @@ export default function HomePage() {
           transition={{ delay: 0.3, duration: 0.8 }}
           className="mt-12 flex justify-center"
         >
-          <div className="flex items-center bg-white/5 border border-white/20 backdrop-blur-xl px-5 py-4 rounded-2xl w-full max-w-2xl hover:border-purple-400/50 transition">
+          <div className="flex items-center bg-white/5 border border-white/20 backdrop-blur-xl px-5 py-4 rounded-2xl w-full max-w-2xl hover:border-purple-400/50 transition" suppressHydrationWarning>
             <Search className="w-5 h-5 text-purple-300" />
             <input
               type="text"
               placeholder="Search notes, subjects, files..."
               className="bg-transparent outline-none ml-4 w-full text-white placeholder-gray-400 text-lg"
+              suppressHydrationWarning
             />
           </div>
         </motion.div>
@@ -149,14 +150,15 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.8 }}
           className="mt-8 flex gap-4 justify-center flex-wrap"
+          suppressHydrationWarning
         >
-          <Link href="/login">
-            <button className="px-8 py-3 bg-gradient-to-r from-purple-500 to-violet-600 rounded-lg font-semibold hover:opacity-90 transition">
+          <Link href="/login" suppressHydrationWarning>
+            <button className="px-8 py-3 bg-gradient-to-r from-purple-500 to-violet-600 rounded-lg font-semibold hover:opacity-90 transition" suppressHydrationWarning>
               Get Started
             </button>
           </Link>
-          <Link href="/dashboard">
-            <button className="px-8 py-3 bg-white/10 border border-white/20 rounded-lg font-semibold hover:bg-white/20 transition">
+          <Link href="/dashboard" suppressHydrationWarning>
+            <button className="px-8 py-3 bg-white/10 border border-white/20 rounded-lg font-semibold hover:bg-white/20 transition" suppressHydrationWarning>
               Explore
             </button>
           </Link>

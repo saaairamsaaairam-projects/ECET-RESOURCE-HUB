@@ -41,6 +41,20 @@ const adminTools = [
     icon: Settings,
     color: "from-pink-600 to-rose-600",
   },
+  {
+    title: "Practice Topics",
+    description: "Manage practice topics for Practice Bits",
+    href: "/admin/practice-topics",
+    icon: Settings,
+    color: "from-purple-600 to-fuchsia-600",
+  },
+  {
+    title: "Practice Questions",
+    description: "Manage practice questions (MCQs)",
+    href: "/admin/practice-questions",
+    icon: Settings,
+    color: "from-purple-600 to-fuchsia-600",
+  },
 ];
 
 export default function AdminDashboard() {

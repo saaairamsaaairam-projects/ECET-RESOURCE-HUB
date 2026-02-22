@@ -4,7 +4,6 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Eye, EyeOff } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/utils/supabase";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -22,27 +21,25 @@ export default function LoginPage() {
     const password = formData.get("password") as string;
 
     try {
-      // Use Supabase client directly for auth
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Call server-side login route so cookies are set server-side
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
 
-      if (authError) {
-        setError(authError.message || "Invalid credentials");
+      const json = await res.json();
+
+      if (!res.ok) {
+        setError(json?.error || "Invalid credentials");
         setLoading(false);
         return;
       }
 
-      if (data.session) {
-        // Wait a moment for auth state to sync
-        await new Promise(resolve => setTimeout(resolve, 500));
-        router.push("/dashboard");
-      } else {
-        setError("Login failed. Please try again.");
-        setLoading(false);
-      }
+      // Server sets auth cookies; navigate to dashboard
+      router.push("/dashboard");
     } catch (err) {
+      console.error(err);
       setError("An error occurred. Please try again.");
       setLoading(false);
     }

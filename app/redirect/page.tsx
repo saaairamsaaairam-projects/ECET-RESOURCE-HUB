@@ -1,73 +1,41 @@
 "use client";
 
-import { useSearchParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { AlertCircle, Loader } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect } from "react";
 
-export default function RedirectPage() {
-  const searchParams = useSearchParams();
+function RedirectLogic() {
   const router = useRouter();
-  const [status, setStatus] = useState<"loading" | "error">("loading");
-  const [errorMessage, setErrorMessage] = useState("");
+  const params = useSearchParams();
+  const key = params.get("key");
 
   useEffect(() => {
-    const fetchAndRedirect = async () => {
-      const key = searchParams.get("key");
-
+    async function run() {
       if (!key) {
-        setStatus("error");
-        setErrorMessage("No folder key provided");
+        router.replace("/404");
         return;
       }
 
-      try {
-        const response = await fetch(`/api/folder-map?key=${encodeURIComponent(key)}`);
+      const res = await fetch(`/api/folder-map?key=${key}`);
+      const data = await res.json();
 
-        if (!response.ok) {
-          setStatus("error");
-          setErrorMessage("Folder not found. It may have been deleted or renamed.");
-          return;
-        }
-
-        const data = await response.json();
-        const folderId = data.folderId;
-
-        // Redirect to the actual folder
-        router.replace(`/folder/${folderId}`);
-      } catch (error) {
-        console.error("Redirect error:", error);
-        setStatus("error");
-        setErrorMessage("Failed to locate folder. Please try again.");
+      if (!data.folderId) {
+        router.replace("/404");
+        return;
       }
-    };
 
-    fetchAndRedirect();
-  }, [searchParams, router]);
+      router.replace(`/folder/${data.folderId}`);
+    }
 
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-        <div className="text-center">
-          <Loader className="w-12 h-12 animate-spin text-cyan-400 mx-auto mb-4" />
-          <p className="text-slate-300 text-lg">Finding your folder...</p>
-        </div>
-      </div>
-    );
-  }
+    run();
+  }, [key]);
 
+  return <div className="text-white p-10">Loading...</div>;
+}
+
+export default function RedirectPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-slate-900 to-slate-800">
-      <div className="bg-slate-800 rounded-xl p-8 max-w-md w-full border border-slate-700">
-        <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
-        <h1 className="text-xl font-bold text-slate-100 mb-2">Folder Not Found</h1>
-        <p className="text-slate-400 mb-6">{errorMessage}</p>
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="w-full bg-cyan-500 hover:bg-cyan-600 text-white font-semibold py-2 rounded-lg transition"
-        >
-          Return to Dashboard
-        </button>
-      </div>
-    </div>
+    <Suspense fallback={<div className="text-white p-10">Loading...</div>}>
+      <RedirectLogic />
+    </Suspense>
   );
 }

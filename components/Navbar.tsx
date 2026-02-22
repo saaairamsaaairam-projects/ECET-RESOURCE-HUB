@@ -52,6 +52,7 @@ export default function Navbar() {
                 )
               }
               className="p-2 hover:bg-white/10 rounded-lg transition"
+              suppressHydrationWarning
             >
               <Search size={20} className="text-gray-300" />
             </button>
@@ -90,7 +91,7 @@ export default function Navbar() {
           </div>
 
           {/* MOBILE MENU ICON */}
-          <button className="md:hidden text-white" onClick={() => setOpen(true)}>
+          <button className="md:hidden text-white" onClick={() => setOpen(true)} suppressHydrationWarning>
             <Menu size={28} />
           </button>
         </div>

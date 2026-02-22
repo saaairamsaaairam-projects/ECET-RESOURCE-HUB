@@ -1,4 +1,5 @@
-import { supabase } from "@/utils/supabase";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
+import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -13,6 +14,29 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Create server-side Supabase client that manages cookies
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // Ignore errors when called from API route
+            }
+          },
+        },
+      }
+    );
 
     // Create Supabase auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -37,6 +61,8 @@ export async function POST(req: NextRequest) {
         // Don't fail signup if profile insert fails, just log it
       }
     }
+
+    console.log("✅ Signup successful, session cookies set for user:", authData.user?.id);
 
     return NextResponse.json(
       { message: "Signup successful", user: authData.user },

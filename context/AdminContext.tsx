@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useState, useContext, ReactNode, useEffect } from "react";
+import { createContext, useState, useContext, ReactNode } from "react";
 
 type AdminContextType = {
   isAdmin: boolean;
@@ -10,31 +10,21 @@ type AdminContextType = {
 
 const AdminContext = createContext<AdminContextType | null>(null);
 
+/**
+ * AdminContext - UI-only state for admin features
+ * NOTE: Real admin authorization is always done server-side via getUserRole()
+ * This context is for UI state management only, NOT for actual auth checks
+ * No localStorage - all persistence comes from server-side session
+ */
 export function AdminProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => {
-    // Load admin state from localStorage on mount (client-side only)
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("adminMode");
-      if (saved === "true") {
-        setIsAdmin(true);
-      }
-    }
-  }, []);
-
   function enableAdmin() {
     setIsAdmin(true);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("adminMode", "true");
-    }
   }
 
   function disableAdmin() {
     setIsAdmin(false);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("adminMode", "false");
-    }
   }
 
   return (
