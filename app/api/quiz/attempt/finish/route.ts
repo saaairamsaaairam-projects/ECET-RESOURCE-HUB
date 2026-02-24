@@ -73,30 +73,24 @@ export async function POST(req: Request) {
     const total = (answers || []).length;
 
     // Update attempt record with final scores
-    const completedAt = new Date().toISOString();
-    const timeTakenSeconds = Math.round((new Date(completedAt).getTime() - new Date(attempt.started_at).getTime()) / 1000);
+    const timeTakenSeconds = Math.round((Date.now() - new Date(attempt.started_at).getTime()) / 1000);
     
     const { error: updErr } = await supabase
       .from("quiz_attempts")
       .update({ 
         score: correct,
-        total_questions: total,
-        correct_answers: correct,
-        wrong_answers: total - correct,
-        status: "submitted",
-        completed_at: completedAt,
-        time_taken: timeTakenSeconds
+        status: "submitted"
       })
       .eq("id", attempt.id);
 
     if (updErr) console.error("finish: failed to update attempt", updErr);
 
-    // Return final result
+    // Return final result with calculated metrics
     const percentage = Math.round((correct / total) * 100);
     return NextResponse.json({ 
       success: true, 
       attemptId: attempt.id,
-      score: correct, 
+      score: correct,
       total,
       percentage,
       timeTaken: timeTakenSeconds

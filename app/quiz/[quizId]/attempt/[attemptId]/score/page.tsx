@@ -11,8 +11,7 @@ interface QuizAttempt {
   total_questions: number;
   correct_answers: number;
   wrong_answers: number;
-  time_taken: number;
-  completed_at: string;
+  started_at: string;
 }
 
 interface QuizMetadata {
@@ -48,7 +47,24 @@ export default function QuizScorePage({
           return;
         }
 
-        setAttempt(attemptData);
+        // Fetch all answers to calculate total questions
+        const { data: answersData, error: answersErr } = await supabase
+          .from('quiz_attempt_answers')
+          .select('id')
+          .eq('attempt_id', attemptId);
+
+        if (!answersErr && answersData) {
+          // Create enriched attempt object with calculated fields
+          const enrichedAttempt = {
+            ...attemptData,
+            total_questions: answersData.length,
+            correct_answers: attemptData.score || 0,
+            wrong_answers: (answersData.length - (attemptData.score || 0))
+          };
+          setAttempt(enrichedAttempt);
+        } else {
+          setAttempt(attemptData);
+        }
 
         // Fetch quiz metadata
         const { data: quizData, error: quizErr } = await supabase
@@ -97,8 +113,9 @@ export default function QuizScorePage({
   }
 
   const percentage = Math.round((attempt.correct_answers / attempt.total_questions) * 100);
-  const minutes = Math.floor((attempt.time_taken || 0) / 60);
-  const seconds = (attempt.time_taken || 0) % 60;
+  const timeTaken = Math.floor((Date.now() - new Date(attempt.started_at).getTime()) / 1000);
+  const minutes = Math.floor(timeTaken / 60);
+  const seconds = timeTaken % 60;
   
   // Performance feedback
   const getPerformanceFeedback = (percent: number) => {

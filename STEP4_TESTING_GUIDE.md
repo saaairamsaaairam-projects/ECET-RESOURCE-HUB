@@ -57,33 +57,73 @@ Updated `AttemptQuestionBlock.tsx` to:
 
 ## 🚀 STEP-BY-STEP TESTING INSTRUCTIONS
 
-### STEP 1: Deploy Database Views
+### STEP 1: Deploy Database Tables & Views
+
+**IMPORTANT:** Run migrations in this order:
+
+#### 1a. Create quiz_attempt_answers table
 
 Run this SQL in Supabase SQL Editor:
 
 ```sql
--- Create view for attempt summary with percentage calculation
+-- Create table for storing student answers during quiz attempts
+CREATE TABLE IF NOT EXISTS quiz_attempt_answers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  attempt_id uuid NOT NULL REFERENCES quiz_attempts(id) ON DELETE CASCADE,
+  question_number int NOT NULL,
+  question_id uuid NOT NULL,
+  selected_option varchar(1), -- A, B, C, D or null if unanswered
+  is_marked boolean DEFAULT false,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Create indexes for queries
+CREATE INDEX IF NOT EXISTS idx_quiz_attempt_answers_attempt_id ON quiz_attempt_answers(attempt_id);
+CREATE INDEX IF NOT EXISTS idx_quiz_attempt_answers_question_id ON quiz_attempt_answers(question_id);
+
+-- Enable RLS
+ALTER TABLE quiz_attempt_answers ENABLE ROW LEVEL SECURITY;
+
+-- Create policy to allow public read/write access
+CREATE POLICY quiz_attempt_answers_select_policy ON quiz_attempt_answers
+  FOR SELECT USING (true);
+
+CREATE POLICY quiz_attempt_answers_insert_policy ON quiz_attempt_answers
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY quiz_attempt_answers_update_policy ON quiz_attempt_answers
+  FOR UPDATE USING (true);
+```
+
+#### 1b. Create Database Views
+
+After the table is created, run this SQL:
+
+```sql
+-- Create view for attempt summary with percentage calculation (simplified schema)
 CREATE OR REPLACE VIEW quiz_attempt_summary AS
 SELECT
   qa.id as attempt_id,
   qa.quiz_id,
   qa.user_id,
   qa.score,
-  qa.total_questions,
-  qa.correct_answers,
-  qa.wrong_answers,
+  COUNT(qaa.id) as total_questions,
+  qa.score as correct_answers,
+  COALESCE(COUNT(qaa.id) - qa.score, 0) as wrong_answers,
   qa.started_at,
-  qa.completed_at,
-  EXTRACT(EPOCH FROM (qa.completed_at - qa.started_at)) as time_taken_seconds,
-  ROUND((qa.correct_answers::FLOAT / NULLIF(qa.total_questions, 0) * 100)::NUMERIC, 2) as percentage
-FROM quiz_attempts qa;
+  EXTRACT(EPOCH FROM (NOW() - qa.started_at)) as time_taken_seconds,
+  ROUND((qa.score::FLOAT / NULLIF(COUNT(qaa.id), 0) * 100)::NUMERIC, 2) as percentage
+FROM quiz_attempts qa
+LEFT JOIN quiz_attempt_answers qaa ON qa.id = qaa.attempt_id
+GROUP BY qa.id, qa.quiz_id, qa.user_id, qa.score, qa.started_at;
 
 -- Create view for detailed review with all question data
 CREATE OR REPLACE VIEW quiz_review_full AS
 SELECT
   qaa.attempt_id,
-  qq.order_index as question_number,
-  pq.id as question_id,
+  qaa.question_number,
+  qaa.question_id,
   pq.question,
   pq.option_a,
   pq.option_b,
@@ -97,23 +137,32 @@ SELECT
     ELSE false
   END as is_correct
 FROM quiz_attempt_answers qaa
-JOIN quiz_questions qq ON qaa.question_id = qq.practice_question_id
-JOIN practice_questions pq ON pq.id = qq.practice_question_id
+LEFT JOIN practice_questions pq ON qaa.question_id = pq.id
 ORDER BY attempt_id, question_number;
 ```
 
-### STEP 2: Ensure RLS Policies Allow Access
+**Note:** These views use only the columns that exist in your actual database schema.
 
-Run in Supabase SQL Editor:
+### STEP 2: Verify Tables & Views Created
+
+Run these verification queries in Supabase SQL Editor:
 
 ```sql
--- Allow public read access to views
-DROP POLICY IF EXISTS "allow_read_attempt_summary" ON quiz_attempt_summary;
-DROP POLICY IF EXISTS "allow_read_review_full" ON quiz_review_full;
+-- Check if quiz_attempt_answers table exists
+SELECT table_name FROM information_schema.tables 
+WHERE table_name = 'quiz_attempt_answers';
 
--- Views inherit parent table policies, but explicitly allow for safety
--- No additional policies needed (queries through quiz_attempts/answers tables)
+-- Check if views exist
+SELECT table_name FROM information_schema.tables 
+WHERE table_type = 'VIEW' AND table_name LIKE 'quiz_%'
+ORDER BY table_name;
+
+-- Should return:
+-- quiz_attempt_summary
+-- quiz_review_full
 ```
+
+If tables don't exist, go back and run the SQL from STEP 1.
 
 ### STEP 3: Test Admin Quiz Creation
 
@@ -265,17 +314,17 @@ SELECT COUNT(*) FROM quiz_attempt_answers WHERE attempt_id = '[attemptId]';
 
 ## 📊 Test Data Queries (Supabase)
 
-Run these in SQL Editor to verify data:
+Run these in SQL Editor to verify data after taking a quiz:
 
 ```sql
 -- 1. Check recent attempt
-SELECT id, quiz_id, score, total_questions, completed_at 
+SELECT id, quiz_id, score, started_at 
 FROM quiz_attempts 
-ORDER BY completed_at DESC 
+ORDER BY started_at DESC 
 LIMIT 1;
 
 -- 2. Check answers for attempt
-SELECT attempt_id, question_id, selected_option, question_number
+SELECT attempt_id, question_number, question_id, selected_option, is_marked
 FROM quiz_attempt_answers 
 WHERE attempt_id = '[attemptId]'
 ORDER BY question_number;
@@ -283,9 +332,20 @@ ORDER BY question_number;
 -- 3. Test review view
 SELECT question_number, question, given_answer, correct_answer, is_correct
 FROM quiz_review_full 
+WHERE attempt_id = '[attemptId]'
+ORDER BY question_number;
+
+-- 4. Calculate score summary using view
+SELECT 
+  attempt_id,
+  total_questions,
+  correct_answers,
+  wrong_answers,
+  percentage
+FROM quiz_attempt_summary
 WHERE attempt_id = '[attemptId]';
 
--- 4. Calculate accuracy
+-- 5. Manual accuracy calculation
 SELECT 
   COUNT(*) as total,
   SUM(CASE WHEN is_correct THEN 1 ELSE 0 END) as correct,
