@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 interface Props {
   folderId: string;
@@ -9,12 +10,14 @@ interface Props {
 
 export default function SubjectTabs({ folderId }: Props) {
   const pathname = usePathname();
+  const { isAdmin } = useAuth();
 
   const tabs = [
     { name: "Syllabus", href: `/folder/${folderId}` },
     { name: "Topics", href: `/folder/${folderId}/topics` },
     { name: "Practice", href: `/practice/${folderId}` },
-    { name: "Quiz", href: `/quiz/manage/${folderId}` },
+    // Admins go to manage page; regular users go to public subject quizzes
+    { name: "Quiz", href: isAdmin ? `/quiz/manage/${folderId}` : `/quiz/subject/${folderId}` },
   ];
 
   return (
