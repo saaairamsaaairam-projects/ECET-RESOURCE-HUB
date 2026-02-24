@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function SubjectQuizzes({ params }: any) {
-  const { subjectId } = params;
+  // `params` is a promise in client components under Next.js 16 — unwrap with `use()`
+  const resolvedParams = use(params as Promise<{ subjectId: string }>);
+  const { subjectId } = resolvedParams;
   const [quizzes, setQuizzes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
