@@ -3,65 +3,6 @@ import { supabase } from "@/utils/supabase";
 
 export async function GET(req: Request) {
   try {
-    const { searchParams } = new URL(req.url);
-    const quizId = searchParams.get("quizId");
-    const page = Number(searchParams.get("page") || "1");
-    const userId = searchParams.get("userId");
-
-    if (!quizId) return NextResponse.json({ error: "Missing quizId" }, { status: 400 });
-
-    // Get latest attempt for this user/quiz
-    const { data: attempt, error: attErr } = await supabase
-      .from("quiz_attempts")
-      .select("*")
-      .eq("quiz_id", quizId)
-      .eq("user_id", userId)
-      .order("started_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    if (attErr || !attempt) return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
-
-    // Determine question range
-    const offset = (page - 1) * 5;
-
-    // Load 5 questions
-    const { data: questions, error: qErr } = await supabase
-      .from("quiz_questions")
-      .select("*")
-      .eq("quiz_id", quizId)
-      .order("question_number", { ascending: true })
-      .range(offset, offset + 4);
-
-    if (qErr) {
-      console.error("page: failed to load questions", qErr);
-      return NextResponse.json({ error: "Failed to load questions" }, { status: 500 });
-    }
-
-    // Load existing answers
-    const { data: answers, error: ansErr } = await supabase
-      .from("quiz_attempt_answers")
-      .select("*")
-      .eq("attempt_id", attempt.id);
-
-    if (ansErr) console.error("page: failed to load answers", ansErr);
-
-    const ansMap: Record<number, any> = {};
-    (answers || []).forEach((a: any) => {
-      ansMap[a.question_number] = a;
-    });
-
-    return NextResponse.json({ questions: questions || [], answers: ansMap, attemptId: attempt.id });
-  } catch (err) {
-    console.error("GET /api/quiz/attempt/page exception:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
-  }
-}
-import { NextResponse } from "next/server";
-import { getAdminClient } from "@/utils/serverAuth";
-
-export async function GET(req: Request) {
-  try {
     const url = new URL(req.url);
     const quizId = url.searchParams.get("quizId");
     const page = Number(url.searchParams.get("page") || "1");
@@ -70,7 +11,7 @@ export async function GET(req: Request) {
     if (!quizId) return NextResponse.json({ error: "Missing quizId" }, { status: 400 });
 
     // fetch mappings
-    const { data: mappings, error: mapErr } = await getAdminClient()
+    const { data: mappings, error: mapErr } = await supabase
       .from("quiz_questions")
       .select("practice_question_id, order_index")
       .eq("quiz_id", quizId)
@@ -83,9 +24,9 @@ export async function GET(req: Request) {
 
     const qIds = (mappings || []).map((m: any) => m.practice_question_id);
 
-    const { data: questionsRaw, error: qErr } = await getAdminClient()
+    const { data: questionsRaw, error: qErr } = await supabase
       .from("practice_questions")
-      .select("id, question, option_a, option_b, option_c, option_d, correct_answer")
+      .select("id, question, option_a, option_b, option_c, option_d, correct_answer, explanation")
       .in("id", qIds || []);
 
     if (qErr) {
@@ -104,7 +45,7 @@ export async function GET(req: Request) {
 
     let answers: any[] = [];
     if (attempt) {
-      const { data: ansRows, error: aErr } = await getAdminClient()
+      const { data: ansRows, error: aErr } = await supabase
         .from("quiz_attempt_answers")
         .select("*")
         .eq("attempt_id", attempt);

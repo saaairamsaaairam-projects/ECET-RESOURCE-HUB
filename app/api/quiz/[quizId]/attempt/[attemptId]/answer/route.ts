@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/utils/serverAuth";
+import { supabase } from "@/utils/supabase";
 
 export async function POST(req: NextRequest, { params }: { params: { quizId: string; attemptId: string } }) {
   try {
@@ -11,10 +11,7 @@ export async function POST(req: NextRequest, { params }: { params: { quizId: str
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
     }
 
-    const client = getAdminClient();
-
-    // Upsert answer: try update, else insert
-    const { data, error } = await client
+    const { data, error } = await supabase
       .from("quiz_attempt_answers")
       .upsert(
         { attempt_id: attemptId, question_id: questionId, selected_option: option },

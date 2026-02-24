@@ -7,10 +7,10 @@ export async function POST(req: Request) {
 
     if (!quizId) return NextResponse.json({ error: "Missing quizId" }, { status: 400 });
 
-    // Step 1 — Create attempt
+    // Step 1 — Create attempt (allow userId to be null for guest attempts)
     const { data: attempt, error: aErr } = await supabase
       .from("quiz_attempts")
-      .insert([{ quiz_id: quizId, user_id: userId }])
+      .insert([{ quiz_id: quizId, user_id: userId || null }])
       .select()
       .single();
 
@@ -43,33 +43,6 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ attemptId: attempt.id });
-  } catch (err) {
-    console.error("POST /api/quiz/attempt/start exception:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
-  }
-}
-import { NextResponse } from "next/server";
-import { getAdminClient } from "@/utils/serverAuth";
-
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-    const { quizId, userId } = body;
-
-    if (!quizId || !userId) return NextResponse.json({ error: "Missing quizId or userId" }, { status: 400 });
-
-    const { data, error } = await getAdminClient()
-      .from("quiz_attempts")
-      .insert([{ quiz_id: quizId, user_id: userId, status: "in_progress" }])
-      .select()
-      .single();
-
-    if (error) {
-      console.error("POST /api/quiz/attempt/start error", error);
-      return NextResponse.json({ error: "Failed to create attempt" }, { status: 500 });
-    }
-
-    return NextResponse.json({ attemptId: data.id });
   } catch (err) {
     console.error("POST /api/quiz/attempt/start exception:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
