@@ -1,54 +1,79 @@
 "use client";
 
-import { useEffect } from "react";
+import { useState } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { supabase } from "@/utils/supabase";
+import { useAuth } from "@/context/AuthContext";
 
-export default function StartCreateAttempt() {
+export default function StartQuizPage() {
   const router = useRouter();
-  const { quizId } = useParams();
+  const { quizId } = useParams() as { quizId: string };
+  const { user } = useAuth();
 
-  useEffect(() => {
-    let mounted = true;
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-    const createAttempt = async () => {
-      try {
-        const session = await supabase.auth.getSession();
-        const user = (session as any)?.data?.session?.user;
-        if (!user) {
-          // not logged in
-          router.push("/login");
-          return;
-        }
+  async function handleStartQuiz() {
+    setLoading(true);
+    setError("");
 
-        const { data, error } = await supabase
-          .from("quiz_attempts")
-          .insert([{ quiz_id: quizId, user_id: user.id, status: "in_progress" }])
-          .select()
-          .single();
+    try {
+      const res = await fetch("/api/quiz/attempt/start", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          quizId,
+          userId: user?.id || null,
+        }),
+      });
 
-        if (error) {
-          console.error("Error creating attempt", error);
-          alert("Failed to start quiz");
-          return;
-        }
+      const json = await res.json();
 
-        if (!mounted) return;
-        router.replace(`/quiz/${quizId}/attempt?attemptId=${data.id}`);
-      } catch (err) {
-        console.error("Create attempt failed", err);
-        alert("Failed to start quiz");
+      if (!res.ok) {
+        setError(json.error || "Failed to start quiz");
+        setLoading(false);
+        return;
       }
-    };
 
-    createAttempt();
+      router.replace(`/quiz/${quizId}/attempt?attempt=${json.attemptId}`);
+    } catch (err) {
+      console.error("Start quiz error:", err);
+      setError("Failed to start quiz. Please try again.");
+      setLoading(false);
+    }
+  }
 
-    return () => {
-      mounted = false;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quizId]);
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center text-white p-6">
+      <div className="max-w-md w-full bg-gray-800 rounded-lg border border-gray-700 p-8 shadow-xl">
+        <h1 className="text-3xl font-bold mb-4">Ready to Start?</h1>
+        <p className="text-gray-300 mb-8 leading-relaxed">
+          Once you start, you'll enter fullscreen exam mode. You can answer questions,
+          save your answers instantly, and navigate freely. Click below when ready.
+        </p>
 
-  return <div className="p-6 text-center">Starting quiz...</div>;
+        {error && (
+          <div className="mb-6 p-4 bg-red-900/50 border border-red-700 rounded text-red-200">
+            {error}
+          </div>
+        )}
+
+        <button
+          onClick={handleStartQuiz}
+          disabled={loading}
+          className="w-full px-6 py-3 bg-purple-600 rounded-lg font-semibold text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition mb-3"
+        >
+          {loading ? "Starting..." : "Start Quiz"}
+        </button>
+
+        <button
+          onClick={() => router.back()}
+          disabled={loading}
+          className="w-full px-6 py-3 bg-gray-700 rounded-lg font-semibold text-white hover:bg-gray-600 disabled:opacity-50 transition"
+        >
+          Back
+        </button>
+      </div>
+    </div>
+  );
 }
 

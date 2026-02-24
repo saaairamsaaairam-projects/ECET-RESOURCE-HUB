@@ -75,7 +75,7 @@ export default function AttemptQuestionBlock({ quizId, page }: { quizId: string;
       const res = await fetch(`/api/quiz/attempt/finish`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ attemptId }),
+        body: JSON.stringify({ attemptId, quizId }),
       });
       const json = await res.json();
       if (!res.ok) {
@@ -83,8 +83,8 @@ export default function AttemptQuestionBlock({ quizId, page }: { quizId: string;
         setSubmitting(false);
         return;
       }
-      // redirect to review
-      router.push(`/quiz/${quizId}/review?attempt=${attemptId}`);
+      // redirect to score page
+      router.push(`/quiz/${quizId}/attempt/${attemptId}/score`);
     } catch (err) {
       console.error("Finish failed", err);
       alert("Failed to finish attempt");

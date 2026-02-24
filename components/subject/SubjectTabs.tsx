@@ -16,8 +16,8 @@ export default function SubjectTabs({ folderId }: Props) {
     { name: "Syllabus", href: `/folder/${folderId}` },
     { name: "Topics", href: `/folder/${folderId}/topics` },
     { name: "Practice", href: `/practice/${folderId}` },
-    // Admins go to manage page; regular users go to public subject quizzes
-    { name: "Quizzes", href: isAdmin ? `/quiz/manage/${folderId}` : `/quiz/subject/${folderId}` },
+    // Admins go to manage page; regular users go to the subject's quiz tab
+    { name: "Quizzes", href: isAdmin ? `/quiz/manage/${folderId}` : `/folder/${folderId}/quiz` },
   ];
 
   return (
