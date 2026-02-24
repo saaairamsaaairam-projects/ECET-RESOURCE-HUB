@@ -6,6 +6,7 @@ import { useToast } from "@/context/ToastContext";
 import { supabase } from "@/utils/supabase";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useRouter } from "next/navigation";
 import {
   FolderPlus,
   FileUp,
@@ -29,6 +30,7 @@ import SubjectTabs from "@/components/subject/SubjectTabs";
 // SubjectTabs has been moved to `components/subject/SubjectTabs.tsx` and is imported above
 export default function FolderPage() {
   const params = useParams();
+  const router = useRouter();
   const folderId = params?.id as string;
   const [resolvedFolderId, setResolvedFolderId] = useState<string | null>(null);
   
@@ -46,29 +48,23 @@ export default function FolderPage() {
 
   useEffect(() => {
     if (!folderId) return;
-    // If the param is a slug (not a UUID), resolve it to an ID first
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-    (async () => {
-      if (!uuidRegex.test(folderId)) {
-        const { data } = await supabase
-          .from("folders")
-          .select("id")
-          .eq("slug", folderId)
-          .single();
+    // Check if folderId is a UUID or a slug
+    // UUIDs match pattern: 8-4-4-4-12 hex digits with hyphens
+    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(folderId);
 
-        if (data?.id) {
-          setResolvedFolderId(data.id);
-        }
-      }
+    if (!isUUID) {
+      // It's a slug — send the user to the redirect route which resolves slugs to UUIDs
+      router.replace(`/redirect?key=${encodeURIComponent(folderId)}`);
+      return;
+    }
 
-      // Load content (functions will pick resolvedFolderId when set)
-      await loadFolder();
-      await loadSubfolders();
-      await loadFiles();
-      await loadBreadcrumb();
-    })();
-  }, [folderId]);
+    // Load content for the UUID
+    loadFolder();
+    loadSubfolders();
+    loadFiles();
+    loadBreadcrumb();
+  }, [folderId, router]);
 
   async function loadFolder() {
     const idToUse = resolvedFolderId || folderId;
