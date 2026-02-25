@@ -21,6 +21,8 @@ export default function TopicManager({ folderId, initialTopics }: Props) {
   const [topicList, setTopicList] = useState(initialTopics);
   const [newTopic, setNewTopic] = useState("");
   const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   // No auth checks needed - server already verified admin access
 
@@ -49,9 +51,11 @@ export default function TopicManager({ folderId, initialTopics }: Props) {
       if (!error && data) {
         setTopicList([...topicList, data]);
         setNewTopic("");
+        setCreateError(null);
       }
     } catch (err) {
       console.error("Error creating topic:", err);
+      setCreateError(String(err));
     } finally {
       setIsCreating(false);
     }
@@ -92,46 +96,7 @@ export default function TopicManager({ folderId, initialTopics }: Props) {
     }
   }
 
-  // Show loading while auth is being checked
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#0f0e17] flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-2 border-violet-500 border-t-transparent mb-4 mx-auto"></div>
-          <p className="text-zinc-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show login prompt if not logged in
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-[#0f0e17] flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">Login Required</h1>
-          <p className="text-zinc-400 mb-6">Please log in to access this page.</p>
-          <Link href="/login" className="text-violet-400 hover:text-violet-300">
-            Go to Login →
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAdmin) {
-    return (
-      <div className="min-h-screen bg-[#0f0e17] flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">Access Denied</h1>
-          <p className="text-zinc-400 mb-6">You do not have admin privileges.</p>
-          <Link href={`/folder/${folderId}/practice`} className="text-violet-400 hover:text-violet-300">
-            ← Back to Practice
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  // No auth checks here; server already validated access for manager
 
   return (
     <div className="min-h-screen bg-[#0f0e17] pt-24 px-6 pb-12">
@@ -161,17 +126,17 @@ export default function TopicManager({ folderId, initialTopics }: Props) {
             <input
               value={newTopic}
               onChange={(e) => setNewTopic(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && !isCreating) {
-                  handleCreateTopic();
-                }
-              }}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter" && !isCreating) {
+                      createTopic();
+                    }
+                  }}
               placeholder="Topic name (e.g., Object-Oriented Programming)"
               disabled={isCreating}
               className="flex-1 bg-zinc-800 text-white px-4 py-2 rounded border border-zinc-700 focus:border-violet-500 outline-none disabled:opacity-50 transition"
             />
             <button
-              onClick={handleCreateTopic}
+              onClick={createTopic}
               disabled={isCreating || !newTopic.trim()}
               className="px-6 py-2 bg-violet-600 hover:bg-violet-700 disabled:opacity-50 text-white font-semibold rounded flex items-center gap-2 transition"
             >
@@ -186,12 +151,12 @@ export default function TopicManager({ folderId, initialTopics }: Props) {
 
         {/* Topics List */}
         <div className="space-y-3">
-          {topics.length === 0 ? (
+          {topicList.length === 0 ? (
             <div className="text-center py-12 bg-white/5 border border-white/10 rounded-xl">
               <p className="text-zinc-400">No topics yet. Create one above!</p>
             </div>
           ) : (
-            topics.map((topic, index) => (
+            topicList.map((topic, index) => (
               <div
                 key={topic.id}
                 className="flex items-center justify-between bg-white/5 border border-white/10 rounded-lg p-4 hover:border-white/20 transition"
@@ -218,7 +183,7 @@ export default function TopicManager({ folderId, initialTopics }: Props) {
                   </Link>
 
                   <button
-                    onClick={() => handleDeleteTopic(topic.id)}
+                    onClick={() => setDeleteConfirm(topic.id)}
                     className="p-2 bg-red-600/20 hover:bg-red-600/40 text-red-400 rounded transition"
                     title="Delete topic"
                   >
@@ -248,7 +213,12 @@ export default function TopicManager({ folderId, initialTopics }: Props) {
                   Cancel
                 </button>
                 <button
-                  onClick={() => handleDeleteTopic(deleteConfirm)}
+                  onClick={() => {
+                    if (deleteConfirm) {
+                      deleteTopic(deleteConfirm);
+                      setDeleteConfirm(null);
+                    }
+                  }}
                   className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded transition"
                 >
                   Delete

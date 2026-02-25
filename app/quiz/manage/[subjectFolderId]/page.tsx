@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { use } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function QuizListPage({ params }: any) {
-  const { subjectFolderId } = use(params);
+  const { subjectFolderId } = params || {};
   const { isAdmin } = useAuth();
   const router = useRouter();
 

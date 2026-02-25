@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase";
 
-export async function POST(req: NextRequest, { params }: { params: { quizId: string; attemptId: string } }) {
+export async function POST(req: NextRequest, ctx: any) {
+  const { params } = ctx;
   try {
     const { attemptId } = params;
     const body = await req.json();
@@ -14,8 +15,8 @@ export async function POST(req: NextRequest, { params }: { params: { quizId: str
     const { data, error } = await supabase
       .from("quiz_attempt_answers")
       .upsert(
-        { attempt_id: attemptId, question_id: questionId, selected_option: option },
-        { onConflict: ["attempt_id", "question_id"] }
+        [{ attempt_id: attemptId, question_id: questionId, selected_option: option }],
+        { onConflict: "attempt_id,question_id" }
       );
 
     if (error) {

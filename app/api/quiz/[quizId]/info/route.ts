@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase";
 
-export async function GET(req: Request, { params }: { params: { quizId: string } }) {
+export async function GET(req: Request, ctx: any) {
   try {
-    const { quizId } = params;
+    const { params } = ctx;
+    const { quizId } = params || {};
 
     const { data: quiz, error: quizErr } = await supabase
       .from("quizzes")

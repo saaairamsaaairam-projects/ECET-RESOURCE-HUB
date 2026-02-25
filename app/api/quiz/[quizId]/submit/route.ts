@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/utils/serverAuth";
 
-export async function POST(req: NextRequest, { params }: { params: { quizId: string } }) {
+export async function POST(req: NextRequest, ctx: any) {
   try {
-    const { quizId } = params;
+    const { params } = ctx;
+    const { quizId } = params || {};
     const body = await req.json();
     const { answers = {}, userId = null } = body;
 

@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/utils/supabase";
 
 export default function NewQuizPage({ params }: any) {
-  const { subjectFolderId } = use(params);
+  const { subjectFolderId } = params || {};
   const { isAdmin } = useAuth();
   const router = useRouter();
 

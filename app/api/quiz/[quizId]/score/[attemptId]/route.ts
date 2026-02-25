@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminClient } from "@/utils/serverAuth";
 
-export async function GET(req: NextRequest, { params }: { params: { quizId: string; attemptId: string } }) {
+export async function GET(req: NextRequest, ctx: any) {
   try {
-    const { quizId, attemptId } = params;
+    const { params } = ctx;
+    const { quizId, attemptId } = params || {};
 
     // Fetch quiz
     const { data: quiz, error: quizErr } = await getAdminClient()
