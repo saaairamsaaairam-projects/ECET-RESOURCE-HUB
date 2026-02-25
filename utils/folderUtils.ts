@@ -1,7 +1,7 @@
 import { supabase } from "./supabase";
 
 export async function getFolderPath(folderId: string) {
-  let path: any[] = [];
+  const path: any[] = [];
   let currentId = folderId;
 
   while (currentId) {

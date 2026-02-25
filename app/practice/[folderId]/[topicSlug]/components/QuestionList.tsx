@@ -30,7 +30,7 @@ export default function QuestionList({
 
   useEffect(() => {
     try {
-      // eslint-disable-next-line no-console
+       
       console.log(
         `QuestionList: topicId=${topicId} initialQuestions=${(initialQuestions || []).length}`,
         initialQuestions && initialQuestions[0]

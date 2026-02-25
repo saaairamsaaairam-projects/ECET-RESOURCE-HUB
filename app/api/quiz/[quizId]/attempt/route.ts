@@ -51,7 +51,7 @@ export async function GET(req: NextRequest, ctx: any) {
     const questions = (mappings || []).map((m: any) => questionsRaw.find((q: any) => q.id === m.practice_question_id)).filter(Boolean);
 
     // Fetch saved answers if attemptId provided
-    let savedAnswers: Record<string, string> = {};
+    const savedAnswers: Record<string, string> = {};
     if (attemptId) {
       const { data: answers, error: ansErr } = await client
         .from("quiz_attempt_answers")

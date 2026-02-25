@@ -31,7 +31,7 @@ export default function BulkUploadModal({ topicId, onClose, onUploaded }: any) {
       });
 
       // Validate expected columns
-      for (let row of normalized) {
+      for (const row of normalized) {
         if (
           !row.question ||
           !row.option_a ||

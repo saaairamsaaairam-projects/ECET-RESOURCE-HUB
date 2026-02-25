@@ -51,7 +51,7 @@ export default async function TopicPracticePage({
 
   // Debug: log questions count to server console
   try {
-    // eslint-disable-next-line no-console
+     
     console.log(
       `TopicPracticePage: topic=${topic?.id} topicSlug=${topicSlug} questions=${(questions || []).length}`
     );
