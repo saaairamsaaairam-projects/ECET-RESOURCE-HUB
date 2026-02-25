@@ -121,62 +121,7 @@ export default function FolderPage() {
     loadFiles();
     loadBreadcrumb();
   }, [folderId, router]);
-
-  async function loadFolder() {
-    const idToUse = resolvedFolderId || folderId;
-    const { data } = await supabase
-      .from("folders")
-      .select("*")
-      .eq("id", idToUse)
-      .single();
-
-    setFolder(data);
-    setShowPractice(true); // Always show practice tabs
-  }
-
-  async function loadSubfolders() {
-    const idToUse = resolvedFolderId || folderId;
-    const { data } = await supabase
-      .from("folders")
-      .select("*")
-      .eq("parent_id", idToUse);
-
-    setSubfolders(data || []);
-  }
-
-  async function loadFiles() {
-    const idToUse = resolvedFolderId || folderId;
-    const { data } = await supabase
-      .from("files")
-      .select("*")
-      .eq("folder_id", idToUse)
-      .order("created_at", { ascending: false });
-
-    setFiles(data || []);
-    setLoading(false);
-  }
-
-  async function loadBreadcrumb() {
-    const path = [];
-    let currentId = resolvedFolderId || folderId;
-
-    while (currentId) {
-      const { data } = await supabase
-        .from("folders")
-        .select("*")
-        .eq("id", currentId)
-        .single();
-
-      if (data) {
-        path.unshift(data);
-        currentId = data.parent_id;
-      } else {
-        break;
-      }
-    }
-
-    setBreadcrumbPath(path);
-  }
+  
 
   function startRenameFile(file: any) {
     setRenameTarget({ type: "file", item: file });
