@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     // Fetch single quiz by ID (for quiz start/play/review pages)
     if (id) {
       const { data, error } = await getAdminClient()
-        .from("quiz_sets")
+        .from("quizzes")
         .select("*")
         .eq("id", id)
         .single();
@@ -20,12 +20,14 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: error.message }, { status: 404 });
       }
 
+      // Normalize to older shape expected by admin UI (include `name` alias)
+      if (data) data.name = data.title || data.name;
       return NextResponse.json(data);
     }
 
     // Fetch all quizzes by subject folder (for admin quiz list page)
     const { data, error } = await getAdminClient()
-      .from("quiz_sets")
+      .from("quizzes")
       .select("*")
       .eq("subject_folder_id", subjectFolderId)
       .order("created_at", { ascending: true });
@@ -35,7 +37,9 @@ export async function GET(req: Request) {
       return NextResponse.json([], { status: 500 });
     }
 
-    return NextResponse.json(data || []);
+    // Add `name` alias for compatibility with admin UI
+    const normalized = (data || []).map((d: any) => ({ ...d, name: d.title || d.name }));
+    return NextResponse.json(normalized);
   } catch (err) {
     console.error("GET /api/quiz/sets exception:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
@@ -63,9 +67,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Map incoming `name` => `title` and compatible fields into `quizzes` table
+    const insertPayload: any = {
+      title: body.name,
+      description: body.description || body.desc || null,
+      subject_folder_id: body.subject_folder_id,
+      mode: body.mode || body.type || 'practice',
+      total_questions: body.total_questions || 0,
+      duration_minutes: body.duration || body.duration_minutes || null,
+    };
+
     const { data, error } = await getAdminClient()
-      .from("quiz_sets")
-      .insert(body)
+      .from("quizzes")
+      .insert(insertPayload)
       .select()
       .single();
 
@@ -74,6 +88,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
+    if (data) data.name = data.title;
     return NextResponse.json(data);
   } catch (err) {
     console.error("POST /api/quiz/sets exception:", err);

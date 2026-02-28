@@ -3,7 +3,7 @@ import { supabase } from "@/utils/supabase";
 export default async function QuizPage({ params }: any) {
   const { quizId } = await params;
   const { data: quiz, error } = await supabase
-    .from("quiz_sets")
+    .from("quizzes")
     .select("*")
     .eq("id", quizId)
     .single();
