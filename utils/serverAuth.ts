@@ -4,13 +4,16 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/auth-helpers-nextjs";
 import { createClient } from "@supabase/supabase-js";
+import { cookies } from "next/headers";
 
 /**
  * Get lazy-initialized admin Supabase client
  * Only created when needed, avoids env var issues at module load
  */
 function getSupabaseAdmin() {
+  // For service role operations (direct DB access)
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
@@ -18,39 +21,57 @@ function getSupabaseAdmin() {
 }
 
 /**
- * Verify admin authorization from request token
- * @param req - NextRequest with Authorization header
+ * Verify admin authorization from request cookies
+ * @param req - NextRequest with authentication cookies
  * @returns user_id if admin, null otherwise
  */
 export async function verifyAdminFromToken(
   req: NextRequest
 ): Promise<string | null> {
   try {
-    const authHeader = req.headers.get("authorization") || "";
-    const token = authHeader.replace("Bearer ", "");
+    const cookieStore = await cookies();
 
-    if (!token) {
-      console.error("❌ No auth token provided");
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // Expected in server context
+            }
+          },
+        },
+      }
+    );
+
+    console.log("🔍 Validating admin access from cookies...");
+
+    // Get user from session cookies
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+      console.error("❌ No authenticated user found:", userError);
       return null;
     }
 
-    console.log("🔍 Validating admin token...");
-
-    // Get user from token
-    const { data, error: userError } = await getSupabaseAdmin().auth.getUser(token);
-
-    if (userError || !data?.user) {
-      console.error("❌ Invalid token or user not found:", userError);
-      return null;
-    }
-
-    console.log("✅ Token valid for user:", data.user.id);
+    console.log("✅ User authenticated:", user.email);
 
     // Verify user is in admins table
-    const { data: adminRecord, error: dbError } = await getSupabaseAdmin()
+    const { data: adminRecord, error: dbError } = await supabase
       .from("admins")
       .select("user_id")
-      .eq("user_id", data.user.id)
+      .eq("user_id", user.id)
       .single();
 
     if (dbError || !adminRecord) {
@@ -59,7 +80,7 @@ export async function verifyAdminFromToken(
     }
 
     console.log("✅ User is admin!");
-    return data.user.id;
+    return user.id;
   } catch (err) {
     console.error("❌ Admin verification error:", err);
     return null;

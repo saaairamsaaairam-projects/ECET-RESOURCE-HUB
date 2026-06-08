@@ -35,7 +35,7 @@ export default function QuizPlay({ params }: { params: Promise<{ quizId: string 
 
   async function loadQuiz() {
     try {
-      const res = await fetch(`/api/quiz/sets?id=${quizId}`);
+      const res = await fetch(`/api/quiz/list?id=${quizId}`);
       const data = await res.json();
       setQuiz(data);
     } catch (err) {

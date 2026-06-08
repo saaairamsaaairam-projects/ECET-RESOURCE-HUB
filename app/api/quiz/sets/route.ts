@@ -26,6 +26,12 @@ export async function GET(req: Request) {
     }
 
     // Fetch all quizzes by subject folder (for admin quiz list page)
+    if (!subjectFolderId) {
+      // nothing to lookup, return empty list rather than letting the
+      // database error on an undefined uuid
+      return NextResponse.json([]);
+    }
+
     const { data, error } = await getAdminClient()
       .from("quizzes")
       .select("*")

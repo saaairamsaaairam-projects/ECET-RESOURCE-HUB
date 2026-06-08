@@ -25,6 +25,9 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
   const [practiceLoading, setPracticeLoading] = useState(false);
   const [selectedPracticeQuestions, setSelectedPracticeQuestions] = useState<Set<string>>(new Set());
   const [showPracticeSelector, setShowPracticeSelector] = useState(false);
+  // list of available topics so admin can assign a quiz topic
+  const [allTopics, setAllTopics] = useState<any[]>([]);
+  const [assignTopicId, setAssignTopicId] = useState("" as string);
 
   // New question form state
   const [newQ, setNewQ] = useState({
@@ -53,20 +56,44 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
     }
   }
 
+  // quiz metadata stored here after initial load
+  const [quizMeta, setQuizMeta] = useState<any>(null);
+  // when the quizMeta loads, prefill assignTopicId in case we need to show the
+  // topic assignment form below
+  useEffect(() => {
+    if (quizMeta && quizMeta.topic_id) {
+      setAssignTopicId(quizMeta.topic_id);
+    }
+  }, [quizMeta]);
+
+  async function loadQuizMeta() {
+    try {
+      const res = await fetch(`/api/quiz/list?id=${quizId}`);
+      const data = await res.json();
+      setQuizMeta(data || null);
+    } catch (err) {
+      console.error("Failed to load quiz metadata", err);
+      setQuizMeta(null);
+    }
+  }
+
   async function loadPracticeQuestions() {
     setPracticeLoading(true);
     try {
-      // Get the quiz first to find its topic_id
-      const quizRes = await fetch(`/api/quiz/sets?id=${quizId}`);
-      const quiz = await quizRes.json();
+      // ensure we have metadata
+      if (!quizMeta) {
+        await loadQuizMeta();
+      }
 
-      if (!quiz.topic_id) {
-        alert("Quiz topic not found");
+      if (!quizMeta?.topic_id) {
+        // this should rarely happen now that the UI prevents opening the
+        // selector without a topic, but we keep the check for safety
+        alert("This quiz has no topic associated. Please assign a topic first.");
         return;
       }
 
       // Load practice questions for this topic
-      const res = await fetch(`/api/practice-questions?topic_id=${quiz.topic_id}&page=1&limit=100`);
+      const res = await fetch(`/api/practice-questions?topic_id=${quizMeta.topic_id}&page=1&limit=100`);
       const data = await res.json();
       setPracticeQuestions(data.questions || []);
     } catch (err) {
@@ -84,16 +111,12 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
     }
 
     try {
-      // Get session token for admin verification
-      const { data } = await supabase.auth.getSession();
-      const token = data?.session?.access_token;
-
       const res = await fetch("/api/quiz/questions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include", // Send cookies for authentication
         body: JSON.stringify({ 
           quiz_id: quizId, 
           ...newQ,
@@ -114,12 +137,12 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
         });
         loadQuestions();
       } else {
-        console.error("Failed to add question", data_res);
-        alert(data_res.error || "Failed to add question");
+        console.error("Failed to add question", res.status, data_res);
+        alert(data_res.error || `Failed to add question (${res.status})`);
       }
     } catch (err) {
       console.error("Add question error", err);
-      alert("Network error");
+      alert(`Network error: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
 
@@ -130,11 +153,7 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
     }
 
     try {
-      const { data } = await supabase.auth.getSession();
-      const token = data?.session?.access_token;
-
       // Add each selected question
-      const token_header = `Bearer ${token}`;
       
       for (const question of practiceQuestions) {
         if (selectedPracticeQuestions.has(question.id)) {
@@ -142,17 +161,11 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: token_header,
             },
+            credentials: "include",
             body: JSON.stringify({
               quiz_id: quizId,
-              question: question.question,
-              option_a: question.option_a,
-              option_b: question.option_b,
-              option_c: question.option_c,
-              option_d: question.option_d,
-              correct_answer: question.correct_option,
-              explanation: question.explanation || "",
+              practice_question_id: question.id,
             }),
           });
 
@@ -177,15 +190,12 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
     if (!confirm("Delete this question?")) return;
 
     try {
-      const { data } = await supabase.auth.getSession();
-      const token = data?.session?.access_token;
-
       const res = await fetch("/api/quiz/questions", {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
+        credentials: "include",
         body: JSON.stringify({ id }),
       });
 
@@ -201,9 +211,49 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
     }
   }
 
+  async function updateQuizTopic(topicId: string) {
+    try {
+      const res = await fetch("/api/quiz/update", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ id: quizId, topic_id: topicId }),
+      });
+      const result = await res.json();
+      if (res.ok) {
+        setQuizMeta(result.quiz);
+        setAssignTopicId("");
+        alert("Topic assigned to quiz");
+      } else {
+        console.error("Failed to update quiz topic", result);
+        alert(result.error || "Failed to assign topic");
+      }
+    } catch (err) {
+      console.error("updateQuizTopic error", err);
+      alert("Network error");
+    }
+  }
+
   useEffect(() => {
     loadQuestions();
   }, [page]);
+
+  useEffect(() => {
+    // load quiz metadata and available topics when page mounts
+    loadQuizMeta();
+    async function fetchTopics() {
+      try {
+        const res = await fetch(`/api/practice/topics?subjectFolderId=`); // no filter needed, backend just returns all
+        const data = await res.json();
+        setAllTopics(data || []);
+      } catch (e) {
+        console.error("Failed to load all topics", e);
+      }
+    }
+    fetchTopics();
+  }, []);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -220,6 +270,37 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
     <div className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Manage Quiz Questions</h1>
 
+      {/* topic assignment warning/form */}
+      {quizMeta && !quizMeta.topic_id && (
+        <div className="mb-6 p-4 bg-yellow-900 rounded border border-yellow-700">
+          <p className="text-yellow-200 mb-2">
+            This quiz has no topic associated. You must assign a topic before
+            you can bulk‑add practice questions.
+          </p>
+          <div className="flex gap-2 items-center">
+            <select
+              value={assignTopicId}
+              onChange={(e) => setAssignTopicId(e.target.value)}
+              className="bg-gray-800 border border-gray-700 text-white rounded p-2"
+            >
+              <option value="">Select topic...</option>
+              {allTopics.map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name || t.title || t.id}
+                </option>
+              ))}
+            </select>
+            <button
+              disabled={!assignTopicId}
+              onClick={() => updateQuizTopic(assignTopicId)}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+            >
+              Assign
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Tab-like buttons */}
       <div className="flex gap-2 mb-6 border-b border-gray-700 pb-4">
         <button
@@ -234,16 +315,18 @@ export default function ManageQuizQuestionsPage({ params }: { params: Promise<{ 
         </button>
         <button
           onClick={() => {
+            if (!quizMeta?.topic_id) return; // guard
             setShowPracticeSelector(true);
             if (practiceQuestions.length === 0) {
               loadPracticeQuestions();
             }
           }}
+          disabled={!quizMeta?.topic_id}
           className={`px-4 py-2 rounded font-semibold transition ${
             showPracticeSelector
               ? "bg-purple-600 text-white"
               : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-          }`}
+          } ${!quizMeta?.topic_id ? "opacity-50 cursor-not-allowed" : ""}`}
         >
           Select from Practice
         </button>

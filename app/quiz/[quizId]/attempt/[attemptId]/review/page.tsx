@@ -35,12 +35,13 @@ interface AttemptMetadata {
 const optionLetters = ['A', 'B', 'C', 'D'];
 const optionKeys = ['option_a', 'option_b', 'option_c', 'option_d'];
 
-export default function ReviewPage({
-  params,
+function ReviewPageContent({
+  quizId,
+  attemptId,
 }: {
-  params: { quizId: string; attemptId: string };
+  quizId: string;
+  attemptId: string;
 }) {
-  const { quizId, attemptId } = params;
   const [questions, setQuestions] = useState<ReviewQuestion[]>([]);
   const [quiz, setQuiz] = useState<QuizMetadata | null>(null);
   const [attempt, setAttempt] = useState<AttemptMetadata | null>(null);
@@ -428,4 +429,12 @@ export default function ReviewPage({
       </div>
     </div>
   );
+}
+export default async function ReviewPage({
+  params,
+}: {
+  params: Promise<{ quizId: string; attemptId: string }>;
+}) {
+  const { quizId, attemptId } = await params;
+  return <ReviewPageContent quizId={quizId} attemptId={attemptId} />;
 }

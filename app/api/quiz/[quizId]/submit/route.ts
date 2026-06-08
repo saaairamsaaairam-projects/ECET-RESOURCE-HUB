@@ -3,7 +3,7 @@ import { getAdminClient } from "@/utils/serverAuth";
 
 export async function POST(req: NextRequest, ctx: any) {
   try {
-    const { params } = ctx;
+    const params = await ctx.params;
     const { quizId } = params || {};
     const body = await req.json();
     const { answers = {}, userId = null } = body;

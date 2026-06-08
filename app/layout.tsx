@@ -4,6 +4,7 @@ import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
 import { AdminProvider } from "@/context/AdminContext";
 import { ToastProvider } from "@/context/ToastContext";
+import { CompareCollegesProvider } from "@/context/CompareCollegesContext";
 import PageWrapper from "@/components/PageWrapper";
 import Navbar from "@/components/Navbar";
 import ToastContainer from "@/components/ToastContainer";
@@ -37,11 +38,13 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>
             <AdminProvider>
-              <Navbar />
-              <ToastContainer />
-              <div className="pt-20">
-                <PageWrapper>{children}</PageWrapper>
-              </div>
+              <CompareCollegesProvider>
+                <Navbar />
+                <ToastContainer />
+                <div className="pt-20">
+                  <PageWrapper>{children}</PageWrapper>
+                </div>
+              </CompareCollegesProvider>
             </AdminProvider>
           </ToastProvider>
         </AuthProvider>

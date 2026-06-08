@@ -3,13 +3,17 @@
 import { useEffect, useState } from "react";
 import { use } from "react";
 import { useAuth } from "@/context/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { supabase } from "@/utils/supabase";
 
-export default function NewQuizPage({ params }: any) {
-  const { subjectFolderId } = params || {};
+export default function NewQuizPage() {
+  const { subjectFolderId } = (useParams() as { subjectFolderId?: string }) || {};
   const { isAdmin } = useAuth();
   const router = useRouter();
+
+  if (!subjectFolderId) {
+    return <div className="p-6 text-center text-red-400">Missing folder ID</div>;
+  }
 
   const [topics, setTopics] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +48,7 @@ export default function NewQuizPage({ params }: any) {
       const { data } = await supabase.auth.getSession();
       const token = data?.session?.access_token;
 
-      const res = await fetch("/api/quiz/sets", {
+      const res = await fetch("/api/quiz/create", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

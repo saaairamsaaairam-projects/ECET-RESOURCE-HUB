@@ -3,7 +3,7 @@ import { getAdminClient } from "@/utils/serverAuth";
 
 export async function GET(req: NextRequest, ctx: any) {
   try {
-    const { params } = ctx;
+    const params = await ctx.params;
     const { quizId } = params || {};
     const { searchParams } = new URL(req.url);
     const attemptId = searchParams.get("attemptId");

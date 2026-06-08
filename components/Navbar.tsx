@@ -26,16 +26,20 @@ export default function Navbar() {
 
           {/* DESKTOP MENU */}
           <div className="hidden md:flex items-center gap-8 text-gray-300 font-medium">
-            {["Home", "MPC", "Branch", "Tools"].map((item) => (
+            {["Home", "Topics", "MPC", "Branch", "Tools"].map((item) => (
               <Link
                 key={item}
                 href={
                   item === "Home"
                     ? "/"
+                    : item === "Topics"
+                    ? "/topics"
                     : item === "Branch"
                     ? "/branches"
                     : item === "MPC"
                     ? "/mpc"
+                    : item === "Tools"
+                    ? "/tools"
                     : `/folder/${item.toLowerCase()}`
                 }
                 className="hover:text-purple-400 transition duration-200"
@@ -116,6 +120,9 @@ export default function Navbar() {
             <div className="mt-6 flex flex-col gap-6 text-white">
               <Link href="/" onClick={() => setOpen(false)}>
                 Home
+              </Link>
+              <Link href="/topics" onClick={() => setOpen(false)}>
+                Topics
               </Link>
               <Link href="/mpc" onClick={() => setOpen(false)}>
                 MPC

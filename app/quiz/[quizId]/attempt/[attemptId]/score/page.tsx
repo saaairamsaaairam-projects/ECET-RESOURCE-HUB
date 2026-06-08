@@ -1,7 +1,7 @@
 'use client';
 
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
 import { supabase } from '@/utils/supabase';
 
 interface QuizAttempt {
@@ -23,9 +23,10 @@ interface QuizMetadata {
 export default function QuizScorePage({ 
   params 
 }: { 
-  params: { quizId: string; attemptId: string } 
+  params: Promise<{ quizId: string; attemptId: string }> 
 }) {
-  const { quizId, attemptId } = params;
+  // params is a Promise in client components; unwrap using React.use
+  const { quizId, attemptId } = React.use(params);
   const [attempt, setAttempt] = useState<QuizAttempt | null>(null);
   const [quiz, setQuiz] = useState<QuizMetadata | null>(null);
   const [loading, setLoading] = useState(true);

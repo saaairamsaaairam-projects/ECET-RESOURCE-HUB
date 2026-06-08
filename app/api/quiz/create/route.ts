@@ -16,20 +16,33 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { folderId, title, questionIds } = body;
+    const {
+      name,
+      topic_id: topicId,
+      subject_folder_id: folderId,
+      mode,
+      description,
+    } = body;
 
-    if (!folderId || !title || !questionIds || questionIds.length === 0) {
-      return badRequestResponse("Missing folderId, title, or questionIds");
+    // minimal validation: we need a folder and name at least
+    if (!folderId || !name) {
+      return badRequestResponse("Missing subject_folder_id or name");
     }
 
-    // 1. Create quiz record
+    // assemble insert object; include topic_id if provided
+    const newQuizRow: any = {
+      subject_folder_id: folderId,
+      title: name,
+      mode: mode || "practice",
+      description: description || null,
+      total_questions: 0,
+    };
+    if (topicId) newQuizRow.topic_id = topicId;
+
+    // create quiz row with metadata; no questions yet
     const { data: quiz, error: createError } = await getAdminClient()
       .from("quizzes")
-      .insert({
-        subject_folder_id: folderId,
-        title,
-        total_questions: questionIds.length,
-      })
+      .insert(newQuizRow)
       .select()
       .single();
 
@@ -38,23 +51,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: createError.message }, { status: 400 });
     }
 
-    // 2. Insert quiz questions mapping
-    const insertRows = (questionIds as string[]).map((qid: string, idx: number) => ({
-      quiz_id: quiz.id,
-      practice_question_id: qid,
-      order_index: idx,
-    }));
+    // topicId is stored on quizzes; nothing further required here
 
-    const { error: linkError } = await getAdminClient()
-      .from("quiz_questions")
-      .insert(insertRows);
-
-    if (linkError) {
-      console.error("Quiz questions link error:", linkError);
-      // Quiz was created but linking failed — still return success
-    }
-
-    return NextResponse.json({ success: true, quizId: quiz.id });
+    return NextResponse.json({ success: true, id: quiz.id, quiz });
   } catch (err: any) {
     console.error("POST /api/quiz/create exception:", err);
     return serverErrorResponse("Failed to create quiz");

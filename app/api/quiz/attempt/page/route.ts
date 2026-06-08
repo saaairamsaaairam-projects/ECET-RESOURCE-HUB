@@ -52,7 +52,10 @@ export async function GET(req: Request) {
       if (aErr) {
         console.error("GET /api/quiz/attempt/page - answers fetch error", aErr);
       } else {
-        answers = ansRows || [];
+        answers = (ansRows || []).map((a: any) => ({
+          ...a,
+          user_answer: a.user_answer ?? a.selected_option,
+        }));
       }
     }
 

@@ -39,10 +39,16 @@ export async function POST(req: NextRequest) {
     );
 
     // Sign in user (this will set session cookies)
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    let data, error;
+    try {
+      ({ data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      }));
+    } catch (fetchErr) {
+      console.error("Login network error", fetchErr);
+      return NextResponse.json({ error: "Network error during authentication" }, { status: 502 });
+    }
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 401 });

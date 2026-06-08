@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase";
+import { getAdminClient } from "@/utils/serverAuth";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     const { attemptId, quizId: bodyQuizId, userId } = body;
 
+    // use the admin client on the server so we aren't tripped up by RLS
+    const admin = getAdminClient();
+
     let attempt: any = null;
     if (attemptId) {
-      const { data: a, error: attemptErr } = await supabase
+      const { data: a, error: attemptErr } = await admin
         .from("quiz_attempts")
         .select("*")
         .eq("id", attemptId)
@@ -18,7 +22,7 @@ export async function POST(req: Request) {
     } else {
       const quizId = bodyQuizId;
       if (!quizId) return NextResponse.json({ error: "Missing quizId" }, { status: 400 });
-      const { data: a, error: attErr } = await supabase
+      const { data: a, error: attErr } = await admin
         .from("quiz_attempts")
         .select("*")
         .eq("quiz_id", quizId)
@@ -75,7 +79,8 @@ export async function POST(req: Request) {
     // Update attempt record with final scores
     const timeTakenSeconds = Math.round((Date.now() - new Date(attempt.started_at).getTime()) / 1000);
     
-    const { error: updErr } = await supabase
+    // update using admin client as well, just to avoid RLS issues
+    const { error: updErr } = await admin
       .from("quiz_attempts")
       .update({ 
         score: correct,

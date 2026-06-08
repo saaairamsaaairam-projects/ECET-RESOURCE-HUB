@@ -1,43 +1,65 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/utils/supabase";
+import { getAdminClient } from "@/utils/serverAuth";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { quizId, question_number, answer, is_marked, attemptId } = body;
+    const { attemptId, questionId, selectedOption } = body;
 
-    if (!quizId || typeof question_number === "undefined") {
-      return NextResponse.json({ error: "Missing quizId or question_number" }, { status: 400 });
+    if (!attemptId || !questionId) {
+      return NextResponse.json(
+        { error: "Missing required fields: attemptId, questionId" },
+        { status: 400 }
+      );
     }
 
-    // find attempt id if not provided
-    let aId = attemptId;
-    if (!aId) {
-      const { data: aRows } = await supabase
-        .from("quiz_attempts")
-        .select("id")
-        .eq("quiz_id", quizId)
-        .order("started_at", { ascending: false })
-        .limit(1);
-      aId = aRows && aRows[0] && aRows[0].id;
-      if (!aId) return NextResponse.json({ error: "No active attempt found" }, { status: 400 });
+    const admin = getAdminClient();
+
+    // Ensure attempt exists before saving answer
+    const { data: attempt, error: attemptError } = await admin
+      .from("quiz_attempts")
+      .select("id")
+      .eq("id", attemptId)
+      .single();
+
+    if (attemptError || !attempt) {
+      console.error("save-answer: attempt not found", { attemptId, attemptError });
+      return NextResponse.json(
+        { error: "Attempt not found" },
+        { status: 404 }
+      );
     }
 
-    // upsert answer (using question_number mapping directly)
-    const { error: upErr } = await supabase
+    // Upsert answer with selected_option
+    const { error } = await admin
       .from("quiz_attempt_answers")
-      .update({ answer, is_marked })
-      .eq("attempt_id", aId)
-      .eq("question_number", question_number);
+      .upsert(
+        {
+          attempt_id: attemptId,
+          question_id: questionId,
+          selected_option: selectedOption,
+        },
+        {
+          onConflict: "attempt_id,question_id",
+        }
+      );
 
-    if (upErr) {
-      console.error("save-answer: update failed", upErr);
-      return NextResponse.json({ error: "Failed to save" }, { status: 500 });
+    if (error) {
+      console.error("save-answer: upsert error", error);
+      return NextResponse.json(
+        { error: error.message || "Failed to save answer" },
+        { status: 500 }
+      );
     }
 
+    console.debug("save-answer: success", { attemptId, questionId, selectedOption });
     return NextResponse.json({ success: true });
+
   } catch (err) {
     console.error("POST /api/quiz/attempt/save-answer exception:", err);
-    return NextResponse.json({ error: "Server error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 }
+    );
   }
 }

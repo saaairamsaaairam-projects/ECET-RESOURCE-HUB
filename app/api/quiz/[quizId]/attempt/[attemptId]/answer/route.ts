@@ -1,18 +1,44 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/utils/supabase";
+import { getAdminClient } from "@/utils/serverAuth";
 
 export async function POST(req: NextRequest, ctx: any) {
-  const { params } = ctx;
+  const params = await ctx.params;
+  console.debug("ENTER /api/quiz/[quizId]/attempt/[attemptId]/answer POST", req.url);
   try {
     const { attemptId } = params;
-    const body = await req.json();
+    const textBody = await req.text();
+    console.debug("raw body text:", textBody);
+    let body: any;
+    try {
+      body = JSON.parse(textBody);
+    } catch {
+      body = {};
+    }
     const { questionId, option } = body;
 
+    // diagnostic logging helps track down bogus payloads
+    console.debug("POST /answer payload", { attemptId, questionId, option });
+
+    // both values are required; option itself may legitimately be null/undefined when
+    // clearing an answer, so we only validate the questionId/attemptId here.
     if (!attemptId || !questionId) {
-      return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+      console.error("POST /answer bad request, missing fields", {
+        attemptId,
+        questionId,
+        option,
+        body,
+      });
+      // return all values explicitly (undefined -> null in JSON) so client can see what was missing
+      return NextResponse.json(
+        { error: "Missing fields", attemptId: attemptId ?? null, questionId: questionId ?? null, option: option ?? null },
+        { status: 400 }
+      );
     }
 
-    const { data, error } = await supabase
+    // use admin client so we don't get blocked by RLS when anokey is used
+    const admin = getAdminClient();
+    const { data, error } = await admin
       .from("quiz_attempt_answers")
       .upsert(
         [{ attempt_id: attemptId, question_id: questionId, selected_option: option }],

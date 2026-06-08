@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-export default function ReviewPage({ params }: any) {
-  const { quizId, attemptId } = params;
+function ReviewPageContent({ quizId, attemptId }: { quizId: string; attemptId: string }) {
 
   const [data, setData] = useState<any | null>(null);
   const [page, setPage] = useState(1);
@@ -136,4 +135,8 @@ export default function ReviewPage({ params }: any) {
       </div>
     </div>
   );
+}
+export default async function ReviewPage({ params }: any) {
+  const { quizId, attemptId } = await params;
+  return <ReviewPageContent quizId={quizId} attemptId={attemptId} />;
 }

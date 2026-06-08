@@ -1,56 +1,90 @@
 import { NextResponse } from "next/server";
-import { getAdminClient } from "@/utils/serverAuth";
+import { getAdminClient, verifyAdminFromToken } from "@/utils/serverAuth";
 
-export async function GET() {
+// lightweight quiz type used by APIs and pages
+interface QuizRow {
+  id: string;
+  title: string;
+  name?: string;
+  description?: string;
+  mode?: string;
+  topic_id?: string;
+  total_questions?: number;
+  duration_minutes?: number;
+  subject_folder_id?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const id = searchParams.get("id");
+    const subjectFolderId = searchParams.get("subjectFolderId");
+
     const client = getAdminClient();
 
-    // quiz_sets is the actual table (created in migrations)
-    const { data: sets, error } = await client
-      .from("quiz_sets")
-      .select("*, subject:subject_folder_id(id)")
-      .order("created_at", { ascending: false });
+    // single quiz lookup
+    if (id) {
+      const { data, error } = await client
+        .from("quizzes")
+        .select("*")
+        .eq("id", id)
+        .single();  // topic_id will be included automatically
 
-    if (error) {
-      console.error("GET /api/quiz/list error", error);
-      // Include error details in development to aid debugging
-      const payload: any = { error: "Failed to load quizzes" };
-      if (process.env.NODE_ENV !== "production") {
-        payload.details = error?.message || error;
+      if (error) {
+        console.error("GET /api/quiz/list (by id) error:", error);
+        return NextResponse.json({ error: error.message }, { status: 404 });
       }
-      return NextResponse.json(payload, { status: 500 });
+
+      if (data) data.name = data.title || data.name;
+      return NextResponse.json(data || null);
     }
 
-    // Map to the shape the frontend expects (title, description, id, mode, total_questions)
-    const quizzes = (sets || []).map((s: any) => ({
-      id: s.id,
-      title: s.name || s.title,
-      name: s.name,
-      description: s.description,
-      mode: s.mode,
-      total_questions: s.total_questions,
-      duration: s.duration_minutes || s.duration,
-    }));
+    // list of quizzes (optionally filtered by subject folder)
+    let query = client.from("quizzes").select("*");
+    if (subjectFolderId) {
+      query = query.eq("subject_folder_id", subjectFolderId);
+    }
 
-    // Log server-side diagnostics
-    console.log("GET /api/quiz/list called", {
-      NODE_ENV: process.env.NODE_ENV,
-      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      count: (quizzes || []).length,
-    });
+    const { data, error } = await query.order("created_at", { ascending: false });
 
-    // Return debug envelope so client can inspect what's happening
-    const debug = {
-      NODE_ENV: process.env.NODE_ENV,
-      hasUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
-      hasServiceKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
-      count: (quizzes || []).length,
-    };
+    if (error) {
+      console.error("GET /api/quiz/list error:", error);
+      return NextResponse.json([], { status: 500 });
+    }
 
-    return NextResponse.json({ quizzes, debug });
+    const quizzes = (data || []).map((q) => ({ ...q, name: q.title || q.name }));
+
+    return NextResponse.json({ quizzes });
   } catch (err) {
-    console.error("GET /api/quiz/list exception", err);
+    console.error("GET /api/quiz/list exception:", err);
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: Request) {
+  // admin only
+  const userId = await verifyAdminFromToken(req as any);
+  if (!userId) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  try {
+    const { id } = await req.json();
+    if (!id) {
+      return NextResponse.json({ error: "Missing quiz id" }, { status: 400 });
+    }
+
+    const { error } = await getAdminClient().from("quizzes").delete().eq("id", id);
+    if (error) {
+      console.error("DELETE /api/quiz/list error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("DELETE /api/quiz/list exception:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

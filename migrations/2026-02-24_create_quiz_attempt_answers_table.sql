@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS quiz_attempt_answers (
   question_number int NOT NULL,
   question_id uuid NOT NULL,
   selected_option varchar(1), -- A, B, C, D or null if unanswered
+  user_answer text,           -- store text answer or mirror selected_option
+  -- legacy column "answer" was removed in later updates; use selected_option/user_answer instead
   is_marked boolean DEFAULT false,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()

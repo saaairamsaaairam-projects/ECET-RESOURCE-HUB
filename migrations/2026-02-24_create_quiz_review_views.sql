@@ -32,9 +32,9 @@ SELECT
   pq.option_d,
   pq.correct_option as correct_answer,
   pq.explanation,
-  qaa.selected_option as given_answer,
+  COALESCE(qaa.user_answer, qaa.selected_option) as given_answer,
   CASE 
-    WHEN qaa.selected_option = pq.correct_option THEN true
+    WHEN COALESCE(qaa.user_answer, qaa.selected_option) = pq.correct_option THEN true
     ELSE false
   END as is_correct
 FROM quiz_attempt_answers qaa

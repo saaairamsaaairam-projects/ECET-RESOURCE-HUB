@@ -1,0 +1,821 @@
+[
+  {
+    "id": "vvit-guntur",
+    "slug": "vvit-guntur",
+    "name": "VVIT Guntur",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Guntur, Andhra Pradesh",
+    "district": "Guntur",
+    "autonomous": true,
+    "naacGrade": "A+",
+    "university": "JNTUK",
+    "website": "https://www.vvitguntur.com",
+    "description": "A student-friendly autonomous engineering college with modern labs, consistent placements, and strong academic support.",
+    "placements": {
+      "averagePackage": "₹4.2 LPA",
+      "highestPackage": "₹12 LPA",
+      "recruiters": [
+        "TCS",
+        "Wipro",
+        "Infosys",
+        "Tech Mahindra"
+      ]
+    },
+    "fees": {
+      "tuition": "₹85,000 / year",
+      "hostel": "₹70,000 / year",
+      "transport": "₹18,000 / year",
+      "other": "Exam and lab charges extra"
+    },
+    "facilities": [
+      "Wi-Fi campus",
+      "Modern labs",
+      "Library",
+      "Hostel",
+      "Sports ground"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "EEE",
+      "MECH"
+    ],
+    "ecetData": [
+      {
+        "branch": "CSE",
+        "cutoff2023": "75",
+        "cutoff2024": "78",
+        "cutoff2025": "80"
+      },
+      {
+        "branch": "ECE",
+        "cutoff2023": "68",
+        "cutoff2024": "71",
+        "cutoff2025": "73"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Active coding clubs and technical events throughout the year.",
+      "attendance": "Attendance is monitored closely for internal and lab sessions.",
+      "placementsReality": "Placement activity is consistent, especially for CSE and ECE students.",
+      "hostelReview": "Hostels are clean, well-maintained, and secure for most students.",
+      "campusLife": "Balanced campus life with regular fests and student activities.",
+      "studentLife": "Good peer support and strong faculty interaction."
+    },
+    "scores": {
+      "academic": 8.4,
+      "placement": 8.1,
+      "infrastructure": 8.2,
+      "hostel": 7.9
+    },
+    "stats": {
+      "reviews": 320,
+      "placementsScore": 82,
+      "campusScore": 78,
+      "affordabilityScore": 74
+    }
+  },
+  {
+    "id": "vignan-university",
+    "slug": "vignan-university",
+    "name": "Vignan University",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Guntur, Andhra Pradesh",
+    "district": "Guntur",
+    "autonomous": true,
+    "naacGrade": "A",
+    "university": "VFSTR",
+    "website": "https://www.vignan.ac.in",
+    "description": "A leading private institution known for engineering, research culture, innovation labs, and campus life.",
+    "placements": {
+      "averagePackage": "₹4.8 LPA",
+      "highestPackage": "₹15 LPA",
+      "recruiters": [
+        "Accenture",
+        "Capgemini",
+        "HCL",
+        "Cognizant"
+      ]
+    },
+    "fees": {
+      "tuition": "₹95,000 / year",
+      "hostel": "₹75,000 / year",
+      "transport": "₹20,000 / year",
+      "other": "Lab and project fees applicable"
+    },
+    "facilities": [
+      "Research centers",
+      "Innovation labs",
+      "Hostel",
+      "Transport",
+      "Sports"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "EEE",
+      "CIVIL"
+    ],
+    "ecetData": [
+      {
+        "branch": "CSE",
+        "cutoff2023": "72",
+        "cutoff2024": "74",
+        "cutoff2025": "76"
+      },
+      {
+        "branch": "EEE",
+        "cutoff2023": "64",
+        "cutoff2024": "66",
+        "cutoff2025": "69"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Strong coding and project-based learning environment.",
+      "attendance": "Attendance rules are standard and communicated well.",
+      "placementsReality": "Campus placements are active with steady recruiter visits.",
+      "hostelReview": "Good hostel infrastructure and decent food options.",
+      "campusLife": "Vibrant campus events and student clubs.",
+      "studentLife": "Encourages innovation, communication, and extracurricular growth."
+    },
+    "scores": {
+      "academic": 8.6,
+      "placement": 8.4,
+      "infrastructure": 8.7,
+      "hostel": 8.0
+    },
+    "stats": {
+      "reviews": 410,
+      "placementsScore": 86,
+      "campusScore": 84,
+      "affordabilityScore": 70
+    }
+  },
+  {
+    "id": "rvr-jc",
+    "slug": "rvr-jc",
+    "name": "RVR & JC College of Engineering",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Guntur, Andhra Pradesh",
+    "district": "Guntur",
+    "autonomous": false,
+    "naacGrade": "A",
+    "university": "JNTUK",
+    "website": "https://www.rvrjc.ac.in",
+    "description": "A respected engineering college with solid academics, a long-standing reputation, and approachable faculty.",
+    "placements": {
+      "averagePackage": "₹3.8 LPA",
+      "highestPackage": "₹10 LPA",
+      "recruiters": [
+        "L&T",
+        "TCS",
+        "Zoho",
+        "Wipro"
+      ]
+    },
+    "fees": {
+      "tuition": "₹78,000 / year",
+      "hostel": "₹65,000 / year",
+      "transport": "₹15,000 / year",
+      "other": "Semester fee and library charges"
+    },
+    "facilities": [
+      "Library",
+      "Seminar hall",
+      "Hostel",
+      "Transportation",
+      "Labs"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "MECH",
+      "CIVIL"
+    ],
+    "ecetData": [
+      {
+        "branch": "MECH",
+        "cutoff2023": "68",
+        "cutoff2024": "70",
+        "cutoff2025": "72"
+      },
+      {
+        "branch": "CIVIL",
+        "cutoff2023": "60",
+        "cutoff2024": "62",
+        "cutoff2025": "65"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Good academic environment with moderate technical exposure.",
+      "attendance": "Attendance is generally strict during semester exams.",
+      "placementsReality": "Placement support is improving steadily each year.",
+      "hostelReview": "Hostel facilities are decent and affordable.",
+      "campusLife": "Traditional campus with a strong academic focus.",
+      "studentLife": "Best suited for students who prefer discipline and consistency."
+    },
+    "scores": {
+      "academic": 8.0,
+      "placement": 7.7,
+      "infrastructure": 7.8,
+      "hostel": 7.5
+    },
+    "stats": {
+      "reviews": 280,
+      "placementsScore": 76,
+      "campusScore": 75,
+      "affordabilityScore": 78
+    }
+  },
+  {
+    "id": "pvp-siddhartha",
+    "slug": "pvp-siddhartha",
+    "name": "PVP Siddhartha Institute of Technology",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Vijayawada, Andhra Pradesh",
+    "district": "Krishna",
+    "autonomous": false,
+    "naacGrade": "A",
+    "university": "JNTUK",
+    "website": "https://www.pvpsiddhartha.ac.in",
+    "description": "A well-known engineering college in Vijayawada with strong academics and good placement support.",
+    "placements": {
+      "averagePackage": "₹4.0 LPA",
+      "highestPackage": "₹11 LPA",
+      "recruiters": [
+        "HCL",
+        "Infosys",
+        "Cognizant",
+        "Wipro"
+      ]
+    },
+    "fees": {
+      "tuition": "₹82,000 / year",
+      "hostel": "₹68,000 / year",
+      "transport": "₹16,000 / year",
+      "other": "Canteen and exam charges extra"
+    },
+    "facilities": [
+      "Wi-Fi",
+      "Lab infrastructure",
+      "Canteen",
+      "Hostel",
+      "Sports"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "EEE"
+    ],
+    "ecetData": [
+      {
+        "branch": "CSE",
+        "cutoff2023": "70",
+        "cutoff2024": "73",
+        "cutoff2025": "75"
+      },
+      {
+        "branch": "ECE",
+        "cutoff2023": "63",
+        "cutoff2024": "65",
+        "cutoff2025": "68"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Comfortable environment for technical learning and student clubs.",
+      "attendance": "Attendance policy is moderate and manageable.",
+      "placementsReality": "Placements are reliable for core branches too.",
+      "hostelReview": "Hostels are practical and student-friendly.",
+      "campusLife": "Good mix of academics and student activities.",
+      "studentLife": "Popular choice for students wanting a city-connected campus."
+    },
+    "scores": {
+      "academic": 8.1,
+      "placement": 7.9,
+      "infrastructure": 8.0,
+      "hostel": 7.8
+    },
+    "stats": {
+      "reviews": 310,
+      "placementsScore": 79,
+      "campusScore": 77,
+      "affordabilityScore": 76
+    }
+  },
+  {
+    "id": "anits-visakhapatnam",
+    "slug": "anits-visakhapatnam",
+    "name": "ANITS Engineering College",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Visakhapatnam, Andhra Pradesh",
+    "district": "Visakhapatnam",
+    "autonomous": true,
+    "naacGrade": "A+",
+    "university": "AU",
+    "website": "https://www.anits.edu.in",
+    "description": "A modern engineering campus known for academic excellence, industry exposure, and strong student support.",
+    "placements": {
+      "averagePackage": "₹5.0 LPA",
+      "highestPackage": "₹18 LPA",
+      "recruiters": [
+        "Microsoft",
+        "Amazon",
+        "TCS",
+        "Infosys"
+      ]
+    },
+    "fees": {
+      "tuition": "₹1,00,000 / year",
+      "hostel": "₹80,000 / year",
+      "transport": "₹22,000 / year",
+      "other": "Professional training and lab charges"
+    },
+    "facilities": [
+      "Industry labs",
+      "Smart classrooms",
+      "Hostel",
+      "Library",
+      "Gym"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "MECH",
+      "CHEM"
+    ],
+    "ecetData": [
+      {
+        "branch": "CSE",
+        "cutoff2023": "74",
+        "cutoff2024": "77",
+        "cutoff2025": "79"
+      },
+      {
+        "branch": "ECE",
+        "cutoff2023": "69",
+        "cutoff2024": "72",
+        "cutoff2025": "75"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Excellent for students seeking strong technical and coding exposure.",
+      "attendance": "Strict academic discipline but very helpful for performance.",
+      "placementsReality": "Strong placement record, especially for CSE and ECE.",
+      "hostelReview": "Hostel experience is considered good by most students.",
+      "campusLife": "Well-balanced mix of academics, innovation, and city exposure.",
+      "studentLife": "Preferred by students who want both academics and industry exposure."
+    },
+    "scores": {
+      "academic": 8.8,
+      "placement": 8.9,
+      "infrastructure": 8.6,
+      "hostel": 8.1
+    },
+    "stats": {
+      "reviews": 450,
+      "placementsScore": 90,
+      "campusScore": 87,
+      "affordabilityScore": 68
+    }
+  },
+  {
+    "id": "gvp-college",
+    "slug": "gvp-college",
+    "name": "GVP College of Engineering",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1498243691581-b145c3f54a5a?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Visakhapatnam, Andhra Pradesh",
+    "district": "Visakhapatnam",
+    "autonomous": true,
+    "naacGrade": "A",
+    "university": "AU",
+    "website": "https://www.gvpce.ac.in",
+    "description": "A reputed engineering college with a good academic reputation, strong alumni network, and active industry connections.",
+    "placements": {
+      "averagePackage": "₹4.4 LPA",
+      "highestPackage": "₹13 LPA",
+      "recruiters": [
+        "TCS",
+        "Infosys",
+        "HCL",
+        "Zoho"
+      ]
+    },
+    "fees": {
+      "tuition": "₹88,000 / year",
+      "hostel": "₹72,000 / year",
+      "transport": "₹18,000 / year",
+      "other": "Workshop and exam fees included"
+    },
+    "facilities": [
+      "Smart classrooms",
+      "Labs",
+      "Training center",
+      "Hostel",
+      "Library"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "MECH",
+      "EEE"
+    ],
+    "ecetData": [
+      {
+        "branch": "CSE",
+        "cutoff2023": "71",
+        "cutoff2024": "74",
+        "cutoff2025": "77"
+      },
+      {
+        "branch": "MECH",
+        "cutoff2023": "61",
+        "cutoff2024": "63",
+        "cutoff2025": "66"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Good training support and regular workshops for technical growth.",
+      "attendance": "Attendance discipline is moderate and manageable.",
+      "placementsReality": "Placements are consistent and improving across departments.",
+      "hostelReview": "Hostels are decent and make student life comfortable.",
+      "campusLife": "Strong alumni and student networking culture.",
+      "studentLife": "A solid option for students who value exposure and reputation."
+    },
+    "scores": {
+      "academic": 8.3,
+      "placement": 8.0,
+      "infrastructure": 8.1,
+      "hostel": 7.9
+    },
+    "stats": {
+      "reviews": 335,
+      "placementsScore": 81,
+      "campusScore": 79,
+      "affordabilityScore": 73
+    }
+  },
+  {
+    "id": "aditya-engineering-college",
+    "slug": "aditya-engineering-college",
+    "name": "Aditya Engineering College",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Surampalem, Andhra Pradesh",
+    "district": "East Godavari",
+    "autonomous": true,
+    "naacGrade": "A+",
+    "university": "JNTUK",
+    "website": "https://www.adityatech.edu.in",
+    "description": "A prominent private engineering college with a strong industry connect, good placements, and excellent campus infrastructure.",
+    "placements": {
+      "averagePackage": "₹4.6 LPA",
+      "highestPackage": "₹16 LPA",
+      "recruiters": [
+        "Capgemini",
+        "TCS",
+        "Accenture",
+        "Wipro"
+      ]
+    },
+    "fees": {
+      "tuition": "₹96,000 / year",
+      "hostel": "₹78,000 / year",
+      "transport": "₹21,000 / year",
+      "other": "Skill training and placement charges"
+    },
+    "facilities": [
+      "Modern classrooms",
+      "Innovation center",
+      "Hostel",
+      "Transport",
+      "Placement cell"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "MECH",
+      "CIVIL"
+    ],
+    "ecetData": [
+      {
+        "branch": "CSE",
+        "cutoff2023": "73",
+        "cutoff2024": "76",
+        "cutoff2025": "78"
+      },
+      {
+        "branch": "ECE",
+        "cutoff2023": "67",
+        "cutoff2024": "69",
+        "cutoff2025": "71"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Strong coding culture supported by clubs and industry workshops.",
+      "attendance": "Strict attendance monitoring for practical and technical courses.",
+      "placementsReality": "Placement record is solid and improving, especially for CSE and ECE.",
+      "hostelReview": "Hostels are comfortable and provide a good student experience.",
+      "campusLife": "Professional environment with active student events.",
+      "studentLife": "A strong option for students looking for structured growth."
+    },
+    "scores": {
+      "academic": 8.5,
+      "placement": 8.3,
+      "infrastructure": 8.5,
+      "hostel": 8.0
+    },
+    "stats": {
+      "reviews": 365,
+      "placementsScore": 84,
+      "campusScore": 82,
+      "affordabilityScore": 71
+    }
+  },
+  {
+    "id": "pragati-engineering-college",
+    "slug": "pragati-engineering-college",
+    "name": "Pragati Engineering College",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1517486808906-6ca8b3f04846?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Surampalem, Andhra Pradesh",
+    "district": "East Godavari",
+    "autonomous": false,
+    "naacGrade": "A",
+    "university": "JNTUK",
+    "website": "https://www.pragati.ac.in",
+    "description": "A practical and student-focused engineering college with emphasis on academic discipline and technical learning.",
+    "placements": {
+      "averagePackage": "₹3.9 LPA",
+      "highestPackage": "₹11 LPA",
+      "recruiters": [
+        "Infosys",
+        "TCS",
+        "HCL",
+        "Tech Mahindra"
+      ]
+    },
+    "fees": {
+      "tuition": "₹80,000 / year",
+      "hostel": "₹66,000 / year",
+      "transport": "₹16,500 / year",
+      "other": "Exam and maintenance charges"
+    },
+    "facilities": [
+      "Labs",
+      "Library",
+      "Hostel",
+      "Transport",
+      "Canteen"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "EEE",
+      "MECH"
+    ],
+    "ecetData": [
+      {
+        "branch": "CSE",
+        "cutoff2023": "69",
+        "cutoff2024": "71",
+        "cutoff2025": "74"
+      },
+      {
+        "branch": "EEE",
+        "cutoff2023": "62",
+        "cutoff2024": "64",
+        "cutoff2025": "67"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Good academic support with regular technical workshops.",
+      "attendance": "Attendance policy is standard and fairly consistent.",
+      "placementsReality": "Placement support is improving steadily with industry visits.",
+      "hostelReview": "Hostel environment is decent and student-friendly.",
+      "campusLife": "Friendly and practical campus atmosphere.",
+      "studentLife": "A good option for students who prefer a stable academic setting."
+    },
+    "scores": {
+      "academic": 7.9,
+      "placement": 7.6,
+      "infrastructure": 7.8,
+      "hostel": 7.6
+    },
+    "stats": {
+      "reviews": 295,
+      "placementsScore": 75,
+      "campusScore": 74,
+      "affordabilityScore": 79
+    }
+  },
+  {
+    "id": "srm-ap",
+    "slug": "srm-ap",
+    "name": "SRM AP",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Amaravati, Andhra Pradesh",
+    "district": "Guntur",
+    "autonomous": true,
+    "naacGrade": "A+",
+    "university": "SRM University AP",
+    "website": "https://srmap.edu.in",
+    "description": "A modern university-style campus with strong academic reputation, high-quality infrastructure, and excellent student exposure.",
+    "placements": {
+      "averagePackage": "₹5.3 LPA",
+      "highestPackage": "₹20 LPA",
+      "recruiters": [
+        "Microsoft",
+        "Amazon",
+        "Deloitte",
+        "Adobe"
+      ]
+    },
+    "fees": {
+      "tuition": "₹1,10,000 / year",
+      "hostel": "₹85,000 / year",
+      "transport": "₹25,000 / year",
+      "other": "University and tech lab charges"
+    },
+    "facilities": [
+      "Smart campus",
+      "Innovation labs",
+      "Hostel",
+      "Library",
+      "Research center"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "EEE",
+      "AI & DS"
+    ],
+    "ecetData": [
+      {
+        "branch": "CSE",
+        "cutoff2023": "78",
+        "cutoff2024": "80",
+        "cutoff2025": "82"
+      },
+      {
+        "branch": "ECE",
+        "cutoff2023": "70",
+        "cutoff2024": "73",
+        "cutoff2025": "76"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Excellent coding culture with strong industry-linked learning opportunities.",
+      "attendance": "Attendance is monitored but the campus supports student growth well.",
+      "placementsReality": "High-quality placements and international exposure are strong advantages.",
+      "hostelReview": "Hostels are premium, comfortable, and well managed.",
+      "campusLife": "University-style campus with strong exposure and modern facilities.",
+      "studentLife": "Ideal for students seeking a modern and globally oriented environment."
+    },
+    "scores": {
+      "academic": 9.1,
+      "placement": 9.0,
+      "infrastructure": 9.2,
+      "hostel": 8.6
+    },
+    "stats": {
+      "reviews": 520,
+      "placementsScore": 92,
+      "campusScore": 90,
+      "affordabilityScore": 62
+    }
+  },
+  {
+    "id": "vit-ap",
+    "slug": "vit-ap",
+    "name": "VIT AP",
+    "images": {
+      "cover": "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=900&q=80",
+      "gallery": [
+        "https://images.unsplash.com/photo-1517048676732-d65bc937f952?auto=format&fit=crop&w=900&q=80",
+        "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=900&q=80"
+      ]
+    },
+    "location": "Amaravati, Andhra Pradesh",
+    "district": "Guntur",
+    "autonomous": true,
+    "naacGrade": "A++",
+    "university": "VIT AP",
+    "website": "https://vitap.ac.in",
+    "description": "A premium engineering institution with high academic standards, modern facilities, and strong placement outcomes.",
+    "placements": {
+      "averagePackage": "₹6.0 LPA",
+      "highestPackage": "₹22 LPA",
+      "recruiters": [
+        "Google",
+        "Microsoft",
+        "Amazon",
+        "Adobe"
+      ]
+    },
+    "fees": {
+      "tuition": "₹1,20,000 / year",
+      "hostel": "₹90,000 / year",
+      "transport": "₹28,000 / year",
+      "other": "Technology and student development charges"
+    },
+    "facilities": [
+      "World-class labs",
+      "Research centers",
+      "Hostel",
+      "Sports",
+      "Innovation hub"
+    ],
+    "branches": [
+      "CSE",
+      "ECE",
+      "AI & ML",
+      "EEE"
+    ],
+    "ecetData": [
+      {
+        "branch": "CSE",
+        "cutoff2023": "80",
+        "cutoff2024": "83",
+        "cutoff2025": "85"
+      },
+      {
+        "branch": "ECE",
+        "cutoff2023": "73",
+        "cutoff2024": "76",
+        "cutoff2025": "79"
+      }
+    ],
+    "studentInsights": {
+      "codingCulture": "Excellent ecosystem for programming, research, and innovation.",
+      "attendance": "Attendance and academic discipline are strongly structured.",
+      "placementsReality": "Placements are strong and highly competitive for top branches.",
+      "hostelReview": "Hostel facilities are modern and well maintained.",
+      "campusLife": "Very active campus life with events, clubs, and innovation exposure.",
+      "studentLife": "Best suited for students who want premium infrastructure and strong career outcomes."
+    },
+    "scores": {
+      "academic": 9.3,
+      "placement": 9.2,
+      "infrastructure": 9.4,
+      "hostel": 8.8
+    },
+    "stats": {
+      "reviews": 580,
+      "placementsScore": 94,
+      "campusScore": 91,
+      "affordabilityScore": 58
+    }
+  }
+]

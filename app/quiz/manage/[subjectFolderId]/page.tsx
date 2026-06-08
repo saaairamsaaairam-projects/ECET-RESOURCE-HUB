@@ -3,10 +3,12 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
-export default function QuizListPage({ params }: any) {
-  const { subjectFolderId } = params || {};
+export default function QuizListPage() {
+  // In Next 16 params are passed as a promise to server components; client
+  // components should use the `useParams` hook instead.
+  const { subjectFolderId } = useParams() as { subjectFolderId?: string };
   const { isAdmin } = useAuth();
   const router = useRouter();
 
@@ -16,9 +18,9 @@ export default function QuizListPage({ params }: any) {
   async function loadQuizzes() {
     setLoading(true);
     try {
-      const res = await fetch(`/api/quiz/sets?subjectFolderId=${subjectFolderId}`);
-      const data = await res.json();
-      setQuizzes(data || []);
+      const res = await fetch(`/api/quiz/list?subjectFolderId=${subjectFolderId}`);
+      const payload = await res.json();
+      setQuizzes(payload.quizzes || []);
     } catch (err) {
       console.error("Failed to load quizzes", err);
       setQuizzes([]);
@@ -31,7 +33,7 @@ export default function QuizListPage({ params }: any) {
     if (!confirm("Are you sure you want to delete this quiz?")) return;
 
     try {
-      await fetch("/api/quiz/sets", {
+      await fetch("/api/quiz/list", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
@@ -44,10 +46,11 @@ export default function QuizListPage({ params }: any) {
   }
 
   useEffect(() => {
-    loadQuizzes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+    if (subjectFolderId) {
+      loadQuizzes();
+    }
+    // re-run if the id ever changes
+  }, [subjectFolderId]);
   useEffect(() => {
     if (!isAdmin) {
       router.replace(`/quiz`);

@@ -69,6 +69,24 @@ export interface PracticeQuestion {
   updated_at: string;
 }
 
+// Standalone Topics (independent of folders)
+export interface StandaloneTopic {
+  id: string;
+  title: string;
+  slug: string;
+  description?: string;
+  published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StandaloneTopicContent {
+  id: string;
+  topic_id: string; // FK → standalone_topics.id
+  content: string;
+  updated_at: string;
+}
+
 // API Request/Response Types
 export interface CreateTopicRequest {
   subject: string;
@@ -108,6 +126,28 @@ export interface UpdateQuestionRequest {
 
 export interface DeleteQuestionRequest {
   id: string;
+}
+
+// Standalone Topic API Types
+export interface CreateStandaloneTopicRequest {
+  title: string;
+  description?: string;
+}
+
+export interface UpdateStandaloneTopicRequest {
+  id: string;
+  title?: string;
+  description?: string;
+  published?: boolean;
+}
+
+export interface DeleteStandaloneTopicRequest {
+  id: string;
+}
+
+export interface UpdateStandaloneTopicContentRequest {
+  topicId: string;
+  content: string;
 }
 
 // API Response

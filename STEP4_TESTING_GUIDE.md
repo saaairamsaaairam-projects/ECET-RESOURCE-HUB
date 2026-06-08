@@ -73,6 +73,7 @@ CREATE TABLE IF NOT EXISTS quiz_attempt_answers (
   question_number int NOT NULL,
   question_id uuid NOT NULL,
   selected_option varchar(1), -- A, B, C, D or null if unanswered
+  user_answer text,          -- free‑form answer or same as selected_option
   is_marked boolean DEFAULT false,
   created_at timestamptz DEFAULT now(),
   updated_at timestamptz DEFAULT now()
@@ -193,6 +194,34 @@ If tables don't exist, go back and run the SQL from STEP 1.
 ### STEP 5: Test Finish & Score Page
 
 1. **Click "Finish" Button** at bottom of exam
+
+> **Fix applied:** the finish handler now references the state-managed attempt id
+> (`attemptIdState`) instead of a nonexistent variable.  You should no longer see
+> `ReferenceError: attemptId is not defined` in the console when clicking Finish.
+
+> The `AttemptQuestionBlock` component also receives `initialAttemptId` from the server
+> so it never starts without an attempt even if the query string briefly drops.
+> **When reproducing the `saveAnswer` error**, open both the browser console and your terminal. The component now logs the request details (`saveAnswer request {...}`) and the server prints:
+
+> **Additional fixes:**
+> * Score page no longer triggers the Next.js "params is a Promise" warning; the component uses `React.use(params)`.
+> * Question palette now retains the `attempt` query param in state, preventing intermittent 404s when the URL parameter drops.  Additionally, the palette will **not** make a status request until an attempt ID is available, eliminating the initial 404 during hydration.
+
+>
+> ```
+> ENTER /api/quiz/.../answer POST http://localhost:3000/...
+> raw body text: { ... }
+> POST /answer payload { attemptId: ..., questionId: ..., option: ... }
+> ```
+>
+> The goal is to see if `attemptId` or `questionId` is ever missing. If `attemptId` disappears between pages, you should also note the `attemptIdState` guard added to the component.
+
+
+> **Note:** if you were seeing an "Attempt not found" alert right after submitting,
+> it's usually because the finish API was running with the anonymous supabase client
+> and RLS blocked the lookup.  Make sure the server code (app/api/quiz/attempt/finish/route.ts)
+> uses `getAdminClient()` so it can read the attempt row regardless of auth.
+
 2. **Expected Behavior:**
    - Loader shows "Calculating score..."
    - API computes correct/wrong count
@@ -307,7 +336,7 @@ SELECT COUNT(*) FROM quiz_attempt_answers WHERE attempt_id = '[attemptId]';
 - All others: GRAY
 
 # If colors are wrong, check quiz_attempt_answers table:
-# Must have "selected_option" field with letter (A, B, C, D)
+# Must have "selected_option" or "user_answer" field (letters A–D for MCQs)
 ```
 
 ---

@@ -1,11 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 
-export default function Instructions({ params }: any) {
-  const { quizId } = params;
+export default function Instructions() {
   const router = useRouter();
+  const { quizId } = (useParams() as { quizId?: string }) || {};
+
+  if (!quizId) {
+    // this should never happen but guard for safety
+    return <div className="p-10 text-center">Invalid quiz</div>;
+  }
 
   const [data, setData] = useState<any | null>(null);
 
@@ -26,6 +31,9 @@ export default function Instructions({ params }: any) {
   if (!data) return <div className="p-10 text-center">Loading...</div>;
 
   const { quiz, totalQuestions } = data;
+  if (!quiz) {
+    return <div className="p-10 text-center">Quiz information not available</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-600 via-purple-700 to-purple-900 flex items-center justify-center p-6">

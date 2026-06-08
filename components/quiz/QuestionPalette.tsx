@@ -7,18 +7,44 @@ export default function QuestionPalette({ quizId }: { quizId: string }) {
   const [questions, setQuestions] = useState<any[]>([]);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const search = useSearchParams();
-  const attemptId = search.get("attempt") || search.get("attemptId");
+  const urlAttempt = search.get("attempt") || search.get("attemptId");
+  const [attemptIdState, setAttemptIdState] = useState<string | null>(urlAttempt);
 
   useEffect(() => {
     let mounted = true;
+    // sync state copy of id
+    const current = search.get("attempt") || search.get("attemptId");
+    if (current && !attemptIdState) setAttemptIdState(current);
+
+    // if we don't yet know an attempt ID, wait for the next render when
+    // search (or attemptIdState) changes. this prevents a needless 404 fetch
+    if (!current && !attemptIdState) {
+      // do not call load
+      return () => { mounted = false; };
+    }
+
     async function load() {
       try {
+        const useId = attemptIdState || current;
         const url = new URL(`/api/quiz/attempt/status`, window.location.origin);
         url.searchParams.set("quizId", quizId);
-        if (attemptId) url.searchParams.set("attempt", attemptId);
+        if (useId) url.searchParams.set("attempt", useId);
 
-        const res = await fetch(url.toString());
-        const json = await res.json();
+        console.debug("Palette status fetch", url.toString());
+        const res = await fetch(url.toString(), {
+          credentials: "include",
+        });
+        const text = await res.text();
+        let json: any;
+        try {
+          json = text ? JSON.parse(text) : {};
+        } catch (e) {
+          console.error("Failed to parse /api/quiz/attempt/status (palette) response", e, text);
+          json = {};
+        }
+        if (!res.ok) {
+          console.error("/api/quiz/attempt/status (palette) returned error", res.status, json);
+        }
         if (!mounted) return;
         setQuestions(json.questions || []);
 
@@ -31,7 +57,7 @@ export default function QuestionPalette({ quizId }: { quizId: string }) {
     }
     load();
     return () => { mounted = false; };
-  }, [quizId, attemptId]);
+  }, [quizId, attemptIdState, search]);
 
   function getColor(q: any) {
     const a = answers[q.id];
@@ -49,7 +75,7 @@ export default function QuestionPalette({ quizId }: { quizId: string }) {
         {questions.map((q, idx) => (
           <a
             key={q.id}
-            href={`?page=${Math.floor(idx / 5) + 1}${attemptId ? `&attempt=${attemptId}` : ""}`}
+            href={`?page=${Math.floor(idx / 5) + 1}${attemptIdState ? `&attempt=${attemptIdState}` : ""}`}
             className={`w-10 h-10 flex items-center justify-center text-white rounded ${getColor(q)}`}
           >
             {q.question_number || idx + 1}

@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function ScorePage({ params }: any) {
-  const { quizId, attemptId } = params;
+function ScorePageContent({ quizId, attemptId }: { quizId: string; attemptId: string }) {
 
   const [data, setData] = useState<any | null>(null);
   const router = useRouter();
@@ -112,4 +111,8 @@ export default function ScorePage({ params }: any) {
       </div>
     </div>
   );
+}
+export default async function ScorePage({ params }: any) {
+  const { quizId, attemptId } = await params;
+  return <ScorePageContent quizId={quizId} attemptId={attemptId} />;
 }

@@ -237,7 +237,8 @@ quiz_attempts
 
 quiz_attempt_answers
 ├── id, attempt_id, question_id
-├── selected_option ← Used to compare with correct_answer
+├── selected_option ← Used to compare with correct_answer (multiple choice)
+├── user_answer ← free‑form response or mirror of selected_option; normalized by APIs
 └── question_number
 
 quiz_questions (mapping table)

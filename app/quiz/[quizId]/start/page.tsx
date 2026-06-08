@@ -20,16 +20,29 @@ export default function StartQuizPage() {
       const res = await fetch("/api/quiz/attempt/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           quizId,
           userId: user?.id || null,
         }),
       });
 
-      const json = await res.json();
+      let json: any;
+      try {
+        json = await res.json();
+      } catch (parseErr) {
+        const text = await res.text();
+        console.error("Start quiz: failed to parse JSON", parseErr, text);
+        setError("Unexpected server response. See console for details.");
+        setLoading(false);
+        return;
+      }
 
       if (!res.ok) {
-        setError(json.error || "Failed to start quiz");
+        // show error plus optional details
+        let msg = json.error || "Failed to start quiz";
+        if (json.details) msg += `: ${json.details}`;
+        setError(msg);
         setLoading(false);
         return;
       }

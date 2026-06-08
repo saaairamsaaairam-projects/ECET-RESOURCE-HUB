@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-import { FolderPlus, Upload, Settings } from "lucide-react";
+import { FolderPlus, Upload, Settings, GraduationCap } from "lucide-react";
 
 const adminTools = [
   {
@@ -54,6 +54,13 @@ const adminTools = [
     href: "/admin/practice-questions",
     icon: Settings,
     color: "from-purple-600 to-fuchsia-600",
+  },
+  {
+    title: "College Manager",
+    description: "Create and review colleges from the dashboard",
+    href: "/admin/colleges",
+    icon: GraduationCap,
+    color: "from-emerald-600 to-teal-600",
   },
 ];
 

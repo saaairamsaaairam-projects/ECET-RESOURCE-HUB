@@ -3,7 +3,7 @@ import { supabase } from "@/utils/supabase";
 
 export async function GET(req: Request, ctx: any) {
   try {
-    const { params } = ctx;
+    const params = await ctx.params;
     const { quizId } = params || {};
 
     const { data: quiz, error: quizErr } = await supabase
