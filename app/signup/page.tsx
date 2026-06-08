@@ -42,15 +42,14 @@ export default function SignupPage() {
       }
 
       if (data.user) {
-        // Insert profile record
-        const { error: profileError } = await supabase.from("profiles").insert({
-          id: data.user.id,
-          email: email,
-          role: "user",
-        });
-
-        if (profileError) {
-          console.error("Profile insert error:", profileError);
+        try {
+          await supabase.from("profiles").insert({
+            id: data.user.id,
+            email,
+            role: "user",
+          });
+        } catch (profileErr) {
+          console.error("Profile creation failed:", profileErr);
         }
 
         // Redirect to dashboard (immediate login after signup)

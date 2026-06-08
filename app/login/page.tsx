@@ -36,8 +36,9 @@ export default function LoginPage() {
         return;
       }
 
-      // Server sets auth cookies; navigate to dashboard
-      router.push("/dashboard");
+      // Server sets auth cookies; refresh the session state and go to dashboard
+      router.replace("/dashboard");
+      router.refresh();
     } catch (err) {
       console.error(err);
       setError("An error occurred. Please try again.");
@@ -122,12 +123,17 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <p className="text-center text-gray-300 mt-6">
-          Don't have an account?{" "}
-          <a href="/signup" className="text-purple-400 font-semibold hover:text-purple-300 transition">
-            Sign up
+        <div className="mt-6 flex flex-col items-center gap-2 text-sm text-gray-300">
+          <a href="/forgot-password" className="text-purple-300 font-semibold hover:text-purple-200 transition">
+            Forgot password?
           </a>
-        </p>
+          <p>
+            Don't have an account?{" "}
+            <a href="/signup" className="text-purple-400 font-semibold hover:text-purple-300 transition">
+              Sign up
+            </a>
+          </p>
+        </div>
       </motion.div>
     </div>
   );

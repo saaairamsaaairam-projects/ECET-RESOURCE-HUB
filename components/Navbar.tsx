@@ -14,7 +14,7 @@ export default function Navbar() {
     <>
       {/* FIXED TOP NAV */}
       <nav className="fixed top-0 left-0 w-full z-50 bg-[#0f0e17]/90 backdrop-blur-xl border-b border-white/10 shadow-lg shadow-black/20">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="mx-auto flex w-full max-w-7xl items-center justify-between px-4 py-3 sm:px-6">
           
           {/* BRAND */}
           <Link href="/" className="flex items-center gap-2">
@@ -95,8 +95,8 @@ export default function Navbar() {
           </div>
 
           {/* MOBILE MENU ICON */}
-          <button className="md:hidden text-white" onClick={() => setOpen(true)} suppressHydrationWarning>
-            <Menu size={28} />
+          <button className="rounded-lg border border-white/10 bg-white/5 p-2 text-white md:hidden" onClick={() => setOpen(true)} suppressHydrationWarning>
+            <Menu size={24} />
           </button>
         </div>
       </nav>
@@ -109,7 +109,7 @@ export default function Navbar() {
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ duration: 0.3 }}
-            className="fixed top-0 right-0 h-full w-64 bg-[#1a1a2e] border-l border-white/10 z-50 p-6"
+            className="fixed top-0 right-0 z-50 h-full w-72 max-w-[85vw] border-l border-white/10 bg-[#1a1a2e] p-5 shadow-2xl shadow-black/40 sm:p-6"
           >
             <div className="flex justify-end">
               <button onClick={() => setOpen(false)}>

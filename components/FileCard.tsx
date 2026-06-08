@@ -4,6 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/supabase";
 import { getFileTypeInfo } from "@/utils/getFileIcon";
 import PdfThumbnail from "@/components/PdfThumbnail";
+import { Download, Eye, FileText, PencilLine, Trash2, Video } from "lucide-react";
 import { useState } from "react";
 
 interface FileType {
@@ -59,7 +60,7 @@ export default function FileCard({ file }: { file: FileType }) {
 
   return (
     <>
-      <div className="bg-white p-4 rounded-xl shadow hover:shadow-lg transition relative">
+      <div className="relative rounded-2xl border border-white/10 bg-white/5 p-4 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-purple-400/50">
 
         {/* File thumbnail / icon */}
         <div className="flex justify-center mb-3 w-full">
@@ -82,18 +83,18 @@ export default function FileCard({ file }: { file: FileType }) {
         </div>
 
         {/* File name */}
-        <p className="text-gray-800 font-semibold break-words text-center text-sm mb-3">
+        <p className="mb-3 break-words text-center text-sm font-semibold text-white sm:text-base">
           {file.file_name}
         </p>
 
         {/* Action buttons */}
-        <div className="flex flex-wrap gap-2 justify-center mb-2">
+        <div className="mb-2 flex flex-wrap items-center justify-center gap-2">
           {isImage && (
             <button
               onClick={() => setShowPreview(true)}
-              className="px-2 py-1 bg-blue-500 text-white text-xs rounded hover:bg-blue-600"
+              className="inline-flex items-center gap-1 rounded-lg bg-blue-500/90 px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:bg-blue-400 sm:text-xs"
             >
-              👁️ Preview
+              <Eye className="h-3.5 w-3.5" /> Preview
             </button>
           )}
 
@@ -102,37 +103,38 @@ export default function FileCard({ file }: { file: FileType }) {
             target="_blank"
             download
             onClick={downloadFile}
-            className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 inline-block disabled:opacity-50"
+            className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/90 px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:bg-emerald-400 disabled:opacity-50 sm:text-xs"
           >
-            {isDownloading ? "⬇️..." : "⬇️ Download"}
+            {isDownloading ? <Download className="h-3.5 w-3.5 animate-bounce" /> : <Download className="h-3.5 w-3.5" />}
+            Download
           </a>
 
           {isPDF && (
             <a
               href={file.file_url}
               target="_blank"
-              className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700"
+              className="inline-flex items-center gap-1 rounded-lg bg-purple-600/90 px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:bg-purple-500 sm:text-xs"
             >
-              📄 Open
+              <FileText className="h-3.5 w-3.5" /> Open
             </a>
           )}
         </div>
 
         {/* Admin rename/delete */}
         {isAdmin && (
-          <div className="mt-3 flex gap-2 justify-center">
+          <div className="mt-3 flex flex-wrap justify-center gap-2">
             <a
               href={`/admin/rename-file?id=${file.id}`}
-              className="px-2 py-1 bg-yellow-600 text-white text-xs rounded hover:bg-yellow-700"
+              className="inline-flex items-center gap-1 rounded-lg bg-amber-500/90 px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:bg-amber-400 sm:text-xs"
             >
-              Rename
+              <PencilLine className="h-3.5 w-3.5" /> Rename
             </a>
 
             <button
               onClick={deleteFile}
-              className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700"
+              className="inline-flex items-center gap-1 rounded-lg bg-red-600/90 px-2.5 py-1.5 text-[11px] font-medium text-white transition hover:bg-red-500 sm:text-xs"
             >
-              Delete
+              <Trash2 className="h-3.5 w-3.5" /> Delete
             </button>
           </div>
         )}

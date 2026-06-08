@@ -48,17 +48,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: authError.message }, { status: 400 });
     }
 
-    // Insert profile record
     if (authData.user) {
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: authData.user.id,
-        email: email,
-        role: "user",
-      });
-
-      if (profileError) {
-        console.error("Profile insert error:", profileError);
-        // Don't fail signup if profile insert fails, just log it
+      try {
+        await supabase.from("profiles").insert({
+          id: authData.user.id,
+          email,
+          role: "user",
+        });
+      } catch (profileInsertError) {
+        console.error("Profile creation failed:", profileInsertError);
       }
     }
 

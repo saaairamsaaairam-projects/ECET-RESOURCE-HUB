@@ -12,9 +12,9 @@ export default function CollegeStatCard({ label, value, accent = "purple" }: Col
   };
 
   return (
-    <article className={`rounded-2xl border p-4 shadow-lg shadow-black/20 backdrop-blur-xl ${accentStyles[accent]}`}>
-      <p className="text-xs uppercase tracking-[0.25em] text-gray-200">{label}</p>
-      <p className="mt-2 text-2xl font-semibold text-white">{value}</p>
+    <article className={`rounded-2xl border p-3 shadow-lg shadow-black/20 backdrop-blur-xl sm:p-4 ${accentStyles[accent]}`}>
+      <p className="text-[10px] uppercase tracking-[0.25em] text-gray-200 sm:text-xs">{label}</p>
+      <p className="mt-2 text-xl font-semibold text-white sm:text-2xl">{value}</p>
     </article>
   );
 }

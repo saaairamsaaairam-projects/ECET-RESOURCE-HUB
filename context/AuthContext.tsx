@@ -1,6 +1,8 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { usePathname } from "next/navigation";
+import { supabase } from "@/utils/supabase";
 
 type AuthContextType = {
   user: any;
@@ -14,26 +16,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Fetch user from server API on mount
-  useEffect(() => {
-    fetchCurrentUser();
-  }, []);
+  const pathname = usePathname();
 
   async function fetchCurrentUser() {
     try {
-      // Call server-side API that reads from cookies + database
       const response = await fetch("/api/auth/me", {
         method: "GET",
-        credentials: "include", // Include cookies
+        credentials: "include",
       });
 
       const data = await response.json();
 
       if (data.user) {
         setUser(data.user);
-        setIsAdmin(data.isAdmin || false);
-        console.log("✅ User loaded from server:", data.user.email, "Role:", data.role);
+        setIsAdmin(Boolean(data.isAdmin));
       } else {
         setUser(null);
         setIsAdmin(false);
@@ -46,6 +42,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    fetchCurrentUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
+      fetchCurrentUser();
+    });
+
+    return () => subscription.unsubscribe();
+  }, [pathname]);
+
 
   return (
     <AuthContext.Provider value={{ user, isAdmin, loading }}>

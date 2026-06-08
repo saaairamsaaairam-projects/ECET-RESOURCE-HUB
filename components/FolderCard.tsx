@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { FolderOpen, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/utils/supabase";
 
@@ -24,13 +25,15 @@ export default function FolderCard({ folder }: { folder: Folder }) {
   }
 
   return (
-    <div className="relative group">
-
+    <div className="group relative">
       <Link
         href={`/folder/${folder.id}`}
-        className="block bg-white shadow-md rounded-xl overflow-hidden hover:shadow-xl transition hover:-translate-y-1"
+        className="block overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-lg shadow-black/20 backdrop-blur-xl transition hover:-translate-y-1 hover:border-purple-400/50 hover:bg-white/10"
       >
-        <div className="relative h-32 w-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center">
+        <div className="flex items-center gap-3 border-b border-white/10 bg-gradient-to-r from-purple-500/10 to-violet-500/10 p-4 sm:block sm:p-0">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-500/15 text-purple-100 sm:mx-auto sm:mt-4 sm:h-14 sm:w-14">
+            <FolderOpen className="h-5 w-5 sm:h-6 sm:w-6" />
+          </div>
           {folder.thumbnail && (
             <img
               src={folder.thumbnail}
@@ -47,8 +50,9 @@ export default function FolderCard({ folder }: { folder: Folder }) {
           )}
         </div>
 
-        <div className="p-4 text-center">
-          <h2 className="text-lg font-semibold break-words">{folder.name}</h2>
+        <div className="p-4 text-left sm:text-center">
+          <h2 className="text-sm font-semibold text-white sm:text-base">{folder.name}</h2>
+          <p className="mt-1 text-xs text-gray-300 sm:text-sm">Open resources and topics</p>
         </div>
       </Link>
 
@@ -56,9 +60,10 @@ export default function FolderCard({ folder }: { folder: Folder }) {
       {isAdmin && (
         <button
           onClick={deleteFolder}
-          className="absolute top-2 right-2 bg-red-600 text-white p-1 rounded opacity-80 hover:opacity-100"
+          className="absolute right-2 top-2 rounded-full bg-red-600/90 p-1.5 text-white shadow-lg shadow-black/30 transition hover:bg-red-500"
+          aria-label="Delete folder"
         >
-          ✕
+          <X className="h-4 w-4" />
         </button>
       )}
     </div>
