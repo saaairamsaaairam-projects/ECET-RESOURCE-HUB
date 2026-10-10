@@ -1,104 +1,137 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/utils/supabase";
-import { getAdminClient } from "@/utils/serverAuth";
+import { getAdminClient, getAuthenticatedUserId } from "@/utils/serverAuth";
 
 export async function POST(req: Request) {
   try {
+    const userId = await getAuthenticatedUserId();
+    if (!userId) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+
     const body = await req.json();
-    const { attemptId, quizId: bodyQuizId, userId } = body;
+    const attemptId = typeof body?.attemptId === "string" ? body.attemptId : "";
+    if (!attemptId) return NextResponse.json({ error: "Missing attemptId" }, { status: 400 });
 
-    // use the admin client on the server so we aren't tripped up by RLS
     const admin = getAdminClient();
+    const { data: attempt, error: attemptError } = await admin
+      .from("quiz_attempts")
+      .select("id, quiz_id, user_id, status, score, started_at")
+      .eq("id", attemptId)
+      .maybeSingle();
 
-    let attempt: any = null;
-    if (attemptId) {
-      const { data: a, error: attemptErr } = await admin
-        .from("quiz_attempts")
-        .select("*")
-        .eq("id", attemptId)
-        .single();
-      if (attemptErr || !a) return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
-      attempt = a;
-    } else {
-      const quizId = bodyQuizId;
-      if (!quizId) return NextResponse.json({ error: "Missing quizId" }, { status: 400 });
-      const { data: a, error: attErr } = await admin
-        .from("quiz_attempts")
-        .select("*")
-        .eq("quiz_id", quizId)
-        .eq("user_id", userId)
-        .order("started_at", { ascending: false })
-        .limit(1)
-        .single();
-      if (attErr || !a) return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
-      attempt = a;
+    if (attemptError) {
+      console.error("finish: attempt lookup failed", attemptError);
+      return NextResponse.json({ error: "Failed to load attempt" }, { status: 500 });
     }
+    if (!attempt) return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
+    if (attempt.user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
-    // Load saved answers for this attempt
-    const { data: answers, error: ansErr } = await supabase
-      .from("quiz_attempt_answers")
-      .select("question_id, selected_option, user_answer")
-      .eq("attempt_id", attempt.id);
-
-    if (ansErr) console.error("finish: failed to load answers", ansErr);
-
-    // Load quiz -> practice_question mappings
-    const { data: mappings, error: mapErr } = await supabase
+    const { data: mappings, error: mappingsError } = await admin
       .from("quiz_questions")
       .select("practice_question_id, order_index")
       .eq("quiz_id", attempt.quiz_id)
       .order("order_index", { ascending: true });
 
-    if (mapErr) {
-      console.error("finish: failed to load mappings", mapErr);
-      return NextResponse.json({ error: "Failed to load quiz" }, { status: 500 });
+    if (mappingsError) {
+      console.error("finish: mapping lookup failed", mappingsError);
+      return NextResponse.json({ error: "Failed to load quiz questions" }, { status: 500 });
     }
 
-    const qIds = (mappings || []).map((m: any) => m.practice_question_id);
+    const questionIds = (mappings || []).map((row: any) => row.practice_question_id);
+    const total = questionIds.length;
+    if (total === 0) return NextResponse.json({ error: "Quiz has no questions" }, { status: 400 });
 
-    // Fetch practice question correct answers
-    const { data: questionsRaw, error: qErr } = await supabase
+    // Repeated finish calls return the already persisted result and cannot alter it.
+    if (attempt.status === "submitted") {
+      const score = Number(attempt.score ?? 0);
+      return NextResponse.json({
+        success: true,
+        attemptId: attempt.id,
+        score,
+        total,
+        percentage: Math.round((score / total) * 100),
+        timeTaken: attempt.started_at ? Math.max(0, Math.round((Date.now() - new Date(attempt.started_at).getTime()) / 1000)) : 0,
+      });
+    }
+
+    const { data: answers, error: answersError } = await admin
+      .from("quiz_attempt_answers")
+      .select("question_id, selected_option, user_answer")
+      .eq("attempt_id", attempt.id);
+
+    if (answersError) {
+      console.error("finish: answer lookup failed", answersError);
+      return NextResponse.json({ error: "Failed to load answers" }, { status: 500 });
+    }
+
+    const { data: questions, error: questionsError } = await admin
       .from("practice_questions")
-      .select("id, correct_answer")
-      .in("id", qIds || []);
+      .select("id, correct_option")
+      .in("id", questionIds);
 
-    if (qErr) console.error("finish: failed to load practice questions", qErr);
+    if (questionsError) {
+      console.error("finish: correct-option lookup failed", questionsError);
+      return NextResponse.json({ error: "Failed to score quiz" }, { status: 500 });
+    }
 
-    const correctMap: Record<string, string> = {};
-    (questionsRaw || []).forEach((q: any) => (correctMap[q.id] = String(q.correct_answer)));
+    const correctById = new Map<string, string>(
+      (questions || []).map((question: any): [string, string] => [question.id, String(question.correct_option || "").trim().toUpperCase()])
+    );
+    if (correctById.size !== total) {
+      console.error("finish: some mapped questions are missing correct_option values");
+      return NextResponse.json({ error: "Quiz question data is incomplete" }, { status: 500 });
+    }
 
-    // Compute score
-    let correct = 0;
-    (answers || []).forEach((a: any) => {
-      const selected = a.selected_option ?? a.user_answer ?? null;
-      if (selected != null && String(selected) === String(correctMap[a.question_id])) correct += 1;
-    });
+    const allowedIds = new Set(questionIds);
+    const answerById = new Map<string, any>();
+    for (const answer of answers || []) {
+      if (allowedIds.has(answer.question_id)) answerById.set(answer.question_id, answer);
+    }
 
-    const total = (answers || []).length;
+    let score = 0;
+    for (const questionId of questionIds) {
+      const answer = answerById.get(questionId);
+      const selected = String(answer?.selected_option ?? answer?.user_answer ?? "").trim().toUpperCase();
+      if (selected && selected === correctById.get(questionId)) score += 1;
+    }
 
-    // Update attempt record with final scores
-    const timeTakenSeconds = Math.round((Date.now() - new Date(attempt.started_at).getTime()) / 1000);
-    
-    // update using admin client as well, just to avoid RLS issues
-    const { error: updErr } = await admin
+    const timeTaken = attempt.started_at
+      ? Math.max(0, Math.round((Date.now() - new Date(attempt.started_at).getTime()) / 1000))
+      : 0;
+
+    const { data: updated, error: updateError } = await admin
       .from("quiz_attempts")
-      .update({ 
-        score: correct,
-        status: "submitted"
-      })
-      .eq("id", attempt.id);
+      .update({ score, status: "submitted" })
+      .eq("id", attempt.id)
+      .eq("user_id", userId)
+      .or("status.is.null,status.neq.submitted")
+      .select("id")
+      .maybeSingle();
 
-    if (updErr) console.error("finish: failed to update attempt", updErr);
+    if (updateError) {
+      console.error("finish: failed to persist result", updateError);
+      return NextResponse.json({ error: "Failed to submit quiz" }, { status: 500 });
+    }
 
-    // Return final result with calculated metrics
-    const percentage = Math.round((correct / total) * 100);
-    return NextResponse.json({ 
-      success: true, 
+    if (!updated) {
+      // Another concurrent request may have submitted it; read the persisted score.
+      const { data: finalAttempt, error: finalError } = await admin
+        .from("quiz_attempts")
+        .select("id, score, status")
+        .eq("id", attempt.id)
+        .eq("user_id", userId)
+        .maybeSingle();
+      if (finalError || !finalAttempt || finalAttempt.status !== "submitted") {
+        return NextResponse.json({ error: "Failed to confirm quiz submission" }, { status: 500 });
+      }
+      score = Number(finalAttempt.score ?? score);
+    }
+
+    return NextResponse.json({
+      success: true,
       attemptId: attempt.id,
-      score: correct,
+      score,
       total,
-      percentage,
-      timeTaken: timeTakenSeconds
+      percentage: Math.round((score / total) * 100),
+      timeTaken,
     });
   } catch (err) {
     console.error("POST /api/quiz/attempt/finish exception:", err);

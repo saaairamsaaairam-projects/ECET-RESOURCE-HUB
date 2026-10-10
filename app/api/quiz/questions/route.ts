@@ -14,7 +14,7 @@ export async function GET(req: Request) {
 
     // select columns from mapping + practice questions
     const selectCols = `id, quiz_id, practice_question_id, order_index, created_at,
-      practice_questions(question, option_a, option_b, option_c, option_d, correct_option, explanation)`;
+      practice_questions(question, option_a, option_b, option_c, option_d)`;
 
     // Fetch all questions without pagination (for review page)
     if (all) {
@@ -38,8 +38,6 @@ export async function GET(req: Request) {
         option_b: row.practice_questions?.option_b || "",
         option_c: row.practice_questions?.option_c || "",
         option_d: row.practice_questions?.option_d || "",
-        correct_answer: row.practice_questions?.correct_option || "",
-        explanation: row.practice_questions?.explanation || "",
       }));
 
       return NextResponse.json({
@@ -71,8 +69,6 @@ export async function GET(req: Request) {
       option_b: row.practice_questions?.option_b || "",
       option_c: row.practice_questions?.option_c || "",
       option_d: row.practice_questions?.option_d || "",
-      correct_answer: row.practice_questions?.correct_option || "",
-      explanation: row.practice_questions?.explanation || "",
     }));
 
     return NextResponse.json({

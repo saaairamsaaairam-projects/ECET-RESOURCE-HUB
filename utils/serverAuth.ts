@@ -135,3 +135,39 @@ export async function isUserAdmin(userId: string): Promise<boolean> {
     return false;
   }
 }
+
+
+/**
+ * Resolve the current Supabase-authenticated user from the request cookies.
+ * Never use a user ID supplied by a request body or query string for authorization.
+ */
+export async function getAuthenticatedUserId(): Promise<string | null> {
+  try {
+    const cookieStore = await cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll();
+          },
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) =>
+                cookieStore.set(name, value, options)
+              );
+            } catch {
+              // Cookie writes may not be available in every server context.
+            }
+          },
+        },
+      }
+    );
+    const { data: { user }, error } = await supabase.auth.getUser();
+    if (error || !user) return null;
+    return user.id;
+  } catch {
+    return null;
+  }
+}
