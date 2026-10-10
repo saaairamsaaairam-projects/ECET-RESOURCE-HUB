@@ -71,7 +71,7 @@ export async function GET(_req: NextRequest, ctx: any) {
       answer.question_id,
       String(answer.selected_option ?? answer.user_answer ?? "").trim().toUpperCase(),
     ]));
-    const correctMap = new Map((questions || []).map((question: any) => [
+    const correctMap = new Map<string, string>((questions || []).map((question: any): [string, string] => [
       question.id,
       String(question.correct_option || "").trim().toUpperCase(),
     ]));
