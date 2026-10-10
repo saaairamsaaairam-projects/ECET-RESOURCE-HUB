@@ -67,7 +67,7 @@ export async function GET(_req: NextRequest, ctx: any) {
       return NextResponse.json({ error: "Failed to score quiz" }, { status: 500 });
     }
 
-    const answerMap = new Map((answers || []).map((answer: any) => [
+    const answerMap = new Map<string, string>((answers || []).map((answer: any): [string, string] => [
       answer.question_id,
       String(answer.selected_option ?? answer.user_answer ?? "").trim().toUpperCase(),
     ]));
