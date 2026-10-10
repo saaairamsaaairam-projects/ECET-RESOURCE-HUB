@@ -71,7 +71,7 @@ export async function GET(_req: NextRequest, ctx: any) {
       return NextResponse.json({ error: "Failed to load questions" }, { status: 500 });
     }
 
-    const questionMap = new Map((rawQuestions || []).map((question: any) => [question.id, question]));
+    const questionMap = new Map<string, any>((rawQuestions || []).map((question: any): [string, any] => [question.id, question]));
     const questions = (mappings || []).map((mapping: any, index: number) => {
       const question: any = questionMap.get(mapping.practice_question_id);
       return question ? { ...question, correct_answer: question.correct_option, question_number: mapping.order_index ?? index + 1 } : null;
