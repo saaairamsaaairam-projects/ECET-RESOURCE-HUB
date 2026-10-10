@@ -67,7 +67,7 @@ export async function POST(_req: NextRequest, ctx: any) {
       return NextResponse.json({ error: "Failed to score quiz" }, { status: 500 });
     }
 
-    const correctById = new Map((questions || []).map((question: any) => [
+    const correctById = new Map<string, string>((questions || []).map((question: any): [string, string] => [
       question.id,
       String(question.correct_option || "").trim().toUpperCase(),
     ]));
