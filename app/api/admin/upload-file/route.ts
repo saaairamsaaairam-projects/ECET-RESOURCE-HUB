@@ -1,116 +1,121 @@
 import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+function getSupabaseAdmin() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-async function checkAdmin(req: NextRequest): Promise<string | null> {
+  // Route modules are evaluated during build-time page-data collection.
+  // Create the privileged client only when the route is invoked.
+  if (!supabaseUrl || !serviceRoleKey) {
+    return null;
+  }
+
+  return createClient(supabaseUrl, serviceRoleKey);
+}
+
+async function checkAdmin(
+  req: NextRequest,
+  supabaseAdmin: NonNullable<ReturnType<typeof getSupabaseAdmin>>
+): Promise<string | null> {
   try {
     const authHeader = req.headers.get("authorization") || "";
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader.replace(/^Bearer\\s+/i, "").trim();
 
     if (!token) {
-      console.error("❌ No auth token provided");
+      console.error("No auth token provided");
       return null;
     }
 
-    console.log("🔍 Validating token...");
     const { data, error: userError } = await supabaseAdmin.auth.getUser(token);
-    
+
     if (userError || !data?.user) {
-      console.error("❌ Invalid token or user not found:", userError);
+      console.error("Invalid token or user not found:", userError);
       return null;
     }
 
-    console.log("✅ Token valid for user:", data.user.id);
-
-    // Check admins table directly (this is the authoritative source)
     const { data: adminRecord, error: dbError } = await supabaseAdmin
       .from("admins")
       .select("user_id")
       .eq("user_id", data.user.id)
-      .single();
+      .maybeSingle();
 
     if (dbError) {
-      console.error("❌ Database query error:", dbError);
+      console.error("Admin lookup failed:", dbError);
       return null;
     }
 
-    if (adminRecord) {
-      console.log("✅ User is admin!");
-      return data.user.id;
-    }
-
-    console.error("❌ User not found in admins table");
-    return null;
+    return adminRecord ? data.user.id : null;
   } catch (error) {
-    console.error("❌ Admin check error:", error);
+    console.error("Admin check error:", error);
     return null;
   }
 }
 
 export async function POST(req: NextRequest) {
+  const supabaseAdmin = getSupabaseAdmin();
+
+  if (!supabaseAdmin) {
+    console.error(
+      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variable"
+    );
+    return NextResponse.json(
+      { error: "Server Supabase configuration is missing" },
+      { status: 500 }
+    );
+  }
+
   try {
-    const userId = await checkAdmin(req);
+    const userId = await checkAdmin(req, supabaseAdmin);
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
-    const folder_id = formData.get("folder_id") as string | null;
+    const file = formData.get("file");
+    const folderId = formData.get("folder_id");
 
-    if (!file) {
+    if (!(file instanceof File) || file.size === 0) {
       return NextResponse.json({ error: "File required" }, { status: 400 });
     }
 
-    if (!folder_id) {
+    if (typeof folderId !== "string" || !folderId.trim()) {
       return NextResponse.json({ error: "Folder ID required" }, { status: 400 });
     }
 
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${crypto.randomUUID()}.${fileExt}`;
+    const fileExt = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+    const fileName = `${crypto.randomUUID()}.${fileExt || "bin"}`;
 
-    // Upload to Supabase Storage using admin client
-    const { data, error: uploadError } = await supabaseAdmin.storage
+    const { error: uploadError } = await supabaseAdmin.storage
       .from("folder_files")
       .upload(fileName, file);
 
     if (uploadError) {
-      console.error("Upload failed:", uploadError);
-      return NextResponse.json(
-        { error: `Upload failed: ${uploadError.message}` },
-        { status: 500 }
-      );
+      console.error("File upload failed:", uploadError);
+      return NextResponse.json({ error: "File upload failed" }, { status: 500 });
     }
 
-    // Get public file URL
     const { data: publicUrlData } = supabaseAdmin.storage
       .from("folder_files")
       .getPublicUrl(fileName);
 
-    const publicURL = publicUrlData.publicUrl;
-
-    // Save metadata to DB
     const { error: insertError } = await supabaseAdmin.from("files").insert({
-      folder_id,
+      folder_id: folderId,
       file_name: file.name,
-      file_url: publicURL,
+      file_url: publicUrlData.publicUrl,
     });
 
     if (insertError) {
-      console.error("Insert failed:", insertError);
+      console.error("File metadata insert failed:", insertError);
       return NextResponse.json(
-        { error: `Failed to save file metadata: ${insertError.message}` },
+        { error: "Failed to save file metadata" },
         { status: 500 }
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("API error:", error);
+    console.error("Admin upload-file API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
