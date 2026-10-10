@@ -32,6 +32,7 @@ WITH CHECK (
     FROM quiz_attempts a
     WHERE a.id = quiz_attempt_answers.attempt_id
       AND a.user_id = (SELECT auth.uid())
+      AND COALESCE(a.status, '') <> 'submitted'
   )
 );
 
@@ -53,6 +54,7 @@ WITH CHECK (
     FROM quiz_attempts a
     WHERE a.id = quiz_attempt_answers.attempt_id
       AND a.user_id = (SELECT auth.uid())
+      AND COALESCE(a.status, '') <> 'submitted'
   )
 );
 
