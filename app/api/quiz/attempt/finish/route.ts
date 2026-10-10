@@ -102,7 +102,7 @@ export async function POST(req: Request) {
       .update({ score, status: "submitted" })
       .eq("id", attempt.id)
       .eq("user_id", userId)
-      .neq("status", "submitted")
+      .or("status.is.null,status.neq.submitted")
       .select("id")
       .maybeSingle();
 
