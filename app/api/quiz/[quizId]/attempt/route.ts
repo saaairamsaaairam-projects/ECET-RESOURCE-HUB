@@ -1,71 +1,82 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminClient } from "@/utils/serverAuth";
+import { getAdminClient, getAuthenticatedUserId } from "@/utils/serverAuth";
 
 export async function GET(req: NextRequest, ctx: any) {
   try {
     const params = await ctx.params;
-    const { quizId } = params || {};
+    const quizId = typeof params?.quizId === "string" ? params.quizId : "";
     const { searchParams } = new URL(req.url);
     const attemptId = searchParams.get("attemptId");
+    if (!quizId) return NextResponse.json({ error: "Missing quizId" }, { status: 400 });
 
-    const client = getAdminClient();
-
-    // Fetch quiz metadata
-    const { data: quiz, error: quizErr } = await client
+    const admin = getAdminClient();
+    const { data: quiz, error: quizError } = await admin
       .from("quizzes")
-      .select("*")
+      .select("id, title, description")
       .eq("id", quizId)
-      .single();
+      .maybeSingle();
 
-    if (quizErr || !quiz) {
-      console.error("GET /api/quiz/[quizId]/attempt - quiz not found", quizErr);
-      return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+    if (quizError) {
+      console.error("quiz attempt: quiz lookup failed", quizError);
+      return NextResponse.json({ error: "Failed to load quiz" }, { status: 500 });
     }
+    if (!quiz) return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
 
-    // Fetch quiz question mappings
-    const { data: mappings, error: mapErr } = await client
-      .from("quiz_questions")
-      .select("practice_question_id, order_index")
-      .eq("quiz_id", quizId)
-      .order("order_index", { ascending: true });
-
-    if (mapErr) {
-      console.error("GET /api/quiz/[quizId]/attempt - mappings error", mapErr);
-      return NextResponse.json({ error: "Failed to load questions" }, { status: 500 });
-    }
-
-    const questionIds = (mappings || []).map((m: any) => m.practice_question_id);
-
-    // Fetch actual practice questions
-    const { data: questionsRaw, error: qErr } = await client
-      .from("practice_questions")
-      .select("id, question, option_a, option_b, option_c, option_d, correct_answer, explanation")
-      .in("id", questionIds || []);
-
-    if (qErr) {
-      console.error("GET /api/quiz/[quizId]/attempt - questions error", qErr);
-      return NextResponse.json({ error: "Failed to load questions" }, { status: 500 });
-    }
-
-    // Order questions according to mappings
-    const questions = (mappings || []).map((m: any) => questionsRaw.find((q: any) => q.id === m.practice_question_id)).filter(Boolean);
-
-    // Fetch saved answers if attemptId provided
-    const savedAnswers: Record<string, string> = {};
+    let savedAnswers: Record<string, string | null> = {};
     if (attemptId) {
-      const { data: answers, error: ansErr } = await client
+      const userId = await getAuthenticatedUserId();
+      if (!userId) return NextResponse.json({ error: "Authentication required" }, { status: 401 });
+
+      const { data: attempt, error: attemptError } = await admin
+        .from("quiz_attempts")
+        .select("id, quiz_id, user_id, status")
+        .eq("id", attemptId)
+        .maybeSingle();
+
+      if (attemptError) {
+        console.error("quiz attempt: attempt lookup failed", attemptError);
+        return NextResponse.json({ error: "Failed to load attempt" }, { status: 500 });
+      }
+      if (!attempt || attempt.quiz_id !== quizId) return NextResponse.json({ error: "Attempt not found" }, { status: 404 });
+      if (attempt.user_id !== userId) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      if (attempt.status === "submitted") return NextResponse.json({ error: "Attempt already submitted" }, { status: 409 });
+
+      const { data: answers, error: answersError } = await admin
         .from("quiz_attempt_answers")
         .select("question_id, selected_option")
         .eq("attempt_id", attemptId);
 
-      if (!ansErr && answers) {
-        (answers || []).forEach((a: any) => (savedAnswers[a.question_id] = a.selected_option));
+      if (answersError) {
+        console.error("quiz attempt: saved answer lookup failed", answersError);
+        return NextResponse.json({ error: "Failed to load saved answers" }, { status: 500 });
       }
+      for (const answer of answers || []) savedAnswers[answer.question_id] = answer.selected_option;
     }
 
-    return NextResponse.json({ quiz, questions: questions || [], savedAnswers });
+    const { data: mappings, error: mappingsError } = await admin
+      .from("quiz_questions")
+      .select("practice_question_id, order_index, practice_questions(question, option_a, option_b, option_c, option_d)")
+      .eq("quiz_id", quizId)
+      .order("order_index", { ascending: true });
+
+    if (mappingsError) {
+      console.error("quiz attempt: mapping lookup failed", mappingsError);
+      return NextResponse.json({ error: "Failed to load questions" }, { status: 500 });
+    }
+
+    const questions = (mappings || []).map((row: any, index: number) => ({
+      id: row.practice_question_id,
+      question: row.practice_questions?.question || "",
+      option_a: row.practice_questions?.option_a || "",
+      option_b: row.practice_questions?.option_b || "",
+      option_c: row.practice_questions?.option_c || "",
+      option_d: row.practice_questions?.option_d || "",
+      question_number: row.order_index ?? index + 1,
+    }));
+
+    return NextResponse.json({ quiz, questions, savedAnswers });
   } catch (err) {
-    console.error("GET /api/quiz/[quizId]/attempt exception:", err);
+    console.error("GET quiz attempt exception:", err);
     return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
