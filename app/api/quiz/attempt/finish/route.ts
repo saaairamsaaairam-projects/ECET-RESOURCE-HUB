@@ -73,7 +73,7 @@ export async function POST(req: Request) {
     }
 
     const correctById = new Map<string, string>(
-      (questions || []).map((question: any) => [question.id, String(question.correct_option || "").trim().toUpperCase()])
+      (questions || []).map((question: any): [string, string] => [question.id, String(question.correct_option || "").trim().toUpperCase()])
     );
     if (correctById.size !== total) {
       console.error("finish: some mapped questions are missing correct_option values");
